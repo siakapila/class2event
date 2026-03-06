@@ -1,0 +1,49 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Club {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events    Event[]
+
+  @@map("clubs")
+}
+
+model Event {
+  id          String       @id @default(cuid())
+  name        String
+  venue       String
+  date        DateTime
+  duration    Int          // duration in minutes
+  description String?
+  clubId      String
+  club        Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  teams       TeamMember[]
+
+  @@map("events")
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamName  String
+  memberName String
+  role      String   @default("member") // organizer | member
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("team_members")
+}
