@@ -9,7 +9,7 @@ A full-stack web application that helps college clubs organize and manage events
 
 ---
 
-## ✨ Key Features
+##  Key Features
 
 - Secure authentication system  
 - Event creation and tracking  
@@ -19,7 +19,7 @@ A full-stack web application that helps college clubs organize and manage events
 
 ---
 
-## 🔐 Authentication
+##  Authentication
 
 - Login page with email and password  
 - Signup page for club registration  
@@ -27,7 +27,7 @@ A full-stack web application that helps college clubs organize and manage events
 
 ---
 
-## 📅 Event Management
+##  Event Management
 
 - Create and manage events  
 - Add venue, date, and time  
@@ -36,7 +36,7 @@ A full-stack web application that helps college clubs organize and manage events
 
 ---
 
-## 👥 Team Management
+##  Team Management
 
 - Add multiple teams to events  
 - Add or remove members  
@@ -44,7 +44,7 @@ A full-stack web application that helps college clubs organize and manage events
 
 ---
 
-## 🎨 Design Features
+##  Design Features
 
 - Modern UI with Tailwind CSS  
 - Gradient backgrounds  
@@ -53,7 +53,7 @@ A full-stack web application that helps college clubs organize and manage events
 
 ---
 
-## ⚙️ Tech Stack
+##  Tech Stack
 
 **Frontend**
 - React
@@ -73,7 +73,7 @@ A full-stack web application that helps college clubs organize and manage events
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Installation
 
