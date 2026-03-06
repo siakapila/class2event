@@ -138,7 +138,7 @@ class2event/
 
 ---
 
-## 🧠 How It Works
+## How It Works
 
 1. Users create an account or log in through the authentication system.
 2. Authenticated users can create and manage events.
@@ -148,7 +148,7 @@ class2event/
 
 ---
 
-## 🔮 Future Enhancements
+## Future Enhancements
 
 - Email notifications for events
 - Advanced analytics dashboard
@@ -158,7 +158,7 @@ class2event/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome!
 
@@ -185,13 +185,13 @@ git push origin feature-name
 
 ---
 
-## 📜 License
+## License
 
 This project is licensed under the **MIT License**.
 
 ---
 
-## 👩‍💻 Author
+## Author
 
 **Shruti**
 
