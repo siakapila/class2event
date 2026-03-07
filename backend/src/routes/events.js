@@ -1,32 +1,42 @@
 import { Router } from 'express'
 import { prisma } from '../lib/prisma.js'
-import { authenticate } from '../middleware/auth.js'
+import { authenticateRole } from '../middleware/auth.js'
 
 const router = Router()
 
+// All club routes require club role
+router.use(authenticateRole('club'))
+
 // Get all events for authenticated club
-router.get('/', authenticate, async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const events = await prisma.event.findMany({
-      where: { clubId: req.club.id },
+      where: { clubId: req.user.id },
       include: {
-        teams: { orderBy: { createdAt: 'asc' } }
+        registrations: { include: { members: true } },
+        organizers: true
       },
       orderBy: { date: 'asc' }
     })
     res.json({ events })
   } catch (err) {
-    console.error('Get events error:', err)
     res.status(500).json({ error: 'Failed to fetch events' })
   }
 })
 
 // Get single event
-router.get('/:id', authenticate, async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
     const event = await prisma.event.findFirst({
-      where: { id: req.params.id, clubId: req.club.id },
-      include: { teams: { orderBy: { createdAt: 'asc' } } }
+      where: { id: req.params.id, clubId: req.user.id },
+      include: {
+        registrations: {
+          include: { members: { include: { student: { select: { name: true, email: true, className: true, registrationNo: true } } } } }
+        },
+        organizers: {
+          include: { student: { select: { name: true, email: true, className: true, registrationNo: true } } }
+        }
+      }
     })
 
     if (!event) return res.status(404).json({ error: 'Event not found' })
@@ -37,20 +47,24 @@ router.get('/:id', authenticate, async (req, res) => {
 })
 
 // Create event
-router.post('/', authenticate, async (req, res) => {
+router.post('/', async (req, res) => {
   try {
-    const { name, venue, date, duration, description, teams } = req.body
+    const { name, venue, date, duration, description, organizers } = req.body
 
     if (!name || !venue || !date || !duration) {
       return res.status(400).json({ error: 'Name, venue, date, and duration are required' })
     }
 
-    if (isNaN(new Date(date).getTime())) {
-      return res.status(400).json({ error: 'Invalid date format' })
-    }
-
-    if (duration < 1 || duration > 1440) {
-      return res.status(400).json({ error: 'Duration must be between 1 and 1440 minutes' })
+    // Resolve organizers by email
+    const orgIds = []
+    if (organizers && organizers.length) {
+      const students = await prisma.student.findMany({
+        where: { email: { in: organizers.map(e => e.toLowerCase()) } }
+      })
+      if (students.length !== organizers.length) {
+        return res.status(400).json({ error: 'One or more organizer emails are not registered students' })
+      }
+      orgIds.push(...students.map(s => s.id))
     }
 
     const event = await prisma.event.create({
@@ -60,16 +74,12 @@ router.post('/', authenticate, async (req, res) => {
         date: new Date(date),
         duration: parseInt(duration),
         description,
-        clubId: req.club.id,
-        teams: {
-          create: (teams || []).map(t => ({
-            teamName: t.teamName,
-            memberName: t.memberName,
-            role: t.role || 'member'
-          }))
+        clubId: req.user.id,
+        organizers: {
+          create: orgIds.map(studentId => ({ studentId }))
         }
       },
-      include: { teams: true }
+      include: { organizers: true }
     })
 
     res.status(201).json({ event })
@@ -80,49 +90,76 @@ router.post('/', authenticate, async (req, res) => {
 })
 
 // Update event
-router.put('/:id', authenticate, async (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
-    const { name, venue, date, duration, description, teams } = req.body
+    const { name, venue, date, duration, description, organizers } = req.body
 
     const existing = await prisma.event.findFirst({
-      where: { id: req.params.id, clubId: req.club.id }
+      where: { id: req.params.id, clubId: req.user.id }
     })
     if (!existing) return res.status(404).json({ error: 'Event not found' })
 
-    // Delete existing team members and recreate
-    await prisma.teamMember.deleteMany({ where: { eventId: req.params.id } })
+    const orgIds = []
+    if (organizers && organizers.length) {
+      const students = await prisma.student.findMany({
+        where: { email: { in: organizers.map(e => e.toLowerCase()) } }
+      })
+      if (students.length !== organizers.length) {
+        return res.status(400).json({ error: 'One or more organizer emails are not registered students' })
+      }
+      orgIds.push(...students.map(s => s.id))
+    }
+
+    await prisma.eventOrganizer.deleteMany({ where: { eventId: req.params.id } })
 
     const event = await prisma.event.update({
       where: { id: req.params.id },
       data: {
-        name,
-        venue,
+        name, venue, description,
         date: date ? new Date(date) : undefined,
         duration: duration ? parseInt(duration) : undefined,
-        description,
-        teams: {
-          create: (teams || []).map(t => ({
-            teamName: t.teamName,
-            memberName: t.memberName,
-            role: t.role || 'member'
-          }))
+        organizers: {
+          create: orgIds.map(studentId => ({ studentId }))
         }
       },
-      include: { teams: true }
+      include: { organizers: { include: { student: true } } }
     })
 
     res.json({ event })
   } catch (err) {
-    console.error('Update event error:', err)
     res.status(500).json({ error: 'Failed to update event' })
   }
 })
 
+// Verify or Reject a registration
+router.put('/:eventId/registrations/:regId', async (req, res) => {
+  try {
+    const { status } = req.body
+    if (!['VERIFIED', 'REJECTED'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' })
+    }
+
+    const event = await prisma.event.findFirst({
+      where: { id: req.params.eventId, clubId: req.user.id }
+    })
+    if (!event) return res.status(404).json({ error: 'Event not found' })
+
+    const registration = await prisma.eventRegistration.update({
+      where: { id: req.params.regId, eventId: req.params.eventId },
+      data: { status }
+    })
+
+    res.json({ registration })
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update registration status' })
+  }
+})
+
 // Delete event
-router.delete('/:id', authenticate, async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const existing = await prisma.event.findFirst({
-      where: { id: req.params.id, clubId: req.club.id }
+      where: { id: req.params.id, clubId: req.user.id }
     })
     if (!existing) return res.status(404).json({ error: 'Event not found' })
 

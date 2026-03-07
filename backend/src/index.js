@@ -3,13 +3,15 @@ import express from 'express'
 import cors from 'cors'
 import authRoutes from './routes/auth.js'
 import eventRoutes from './routes/events.js'
+import studentRoutes from './routes/student.js'
+import teacherRoutes from './routes/teacher.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }))
 app.use(express.json({ limit: '10mb' }))
@@ -23,6 +25,8 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes)
 app.use('/api/events', eventRoutes)
+app.use('/api/student', studentRoutes)
+app.use('/api/teacher', teacherRoutes)
 
 // 404
 app.use('*', (req, res) => {

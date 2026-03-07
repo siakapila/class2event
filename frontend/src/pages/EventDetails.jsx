@@ -4,7 +4,7 @@ import api from '../lib/api'
 import { format } from 'date-fns'
 import {
   ArrowLeft, Calendar, MapPin, Clock, Users, Edit3,
-  Trash2, Crown, Zap, AlertTriangle
+  Trash2, Crown, Zap, AlertTriangle, CheckCircle2, XCircle
 } from 'lucide-react'
 
 export default function EventDetails() {
@@ -14,6 +14,7 @@ export default function EventDetails() {
   const [loading, setLoading] = useState(true)
   const [showDelete, setShowDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [updating, setUpdating] = useState(null)
 
   useEffect(() => { loadEvent() }, [id])
 
@@ -38,21 +39,24 @@ export default function EventDetails() {
     }
   }
 
+  const verifyRegistration = async (regId, status) => {
+    setUpdating(regId)
+    try {
+      await api.put(`/api/events/${id}/registrations/${regId}`, { status })
+      await loadEvent()
+    } catch (err) {
+      console.error(err)
+      alert("Failed to update status")
+    } finally {
+      setUpdating(null)
+    }
+  }
+
   const fmtDuration = (mins) => {
     if (mins < 60) return `${mins} minutes`
     const h = Math.floor(mins / 60), m = mins % 60
     return m ? `${h}h ${m}m` : `${h} hour${h > 1 ? 's' : ''}`
   }
-
-  // Group members by team
-  const teamGroups = event ? (() => {
-    const g = {}
-    event.teams.forEach(t => {
-      if (!g[t.teamName]) g[t.teamName] = []
-      g[t.teamName].push(t)
-    })
-    return Object.entries(g)
-  })() : []
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#0d0d1a' }}>
@@ -62,9 +66,11 @@ export default function EventDetails() {
 
   if (!event) return null
 
+  const pendingRegs = event.registrations.filter(r => r.status === 'PENDING')
+  const verifiedRegs = event.registrations.filter(r => r.status !== 'PENDING')
+
   return (
-    <div className="min-h-screen" style={{ background: '#0d0d1a' }}>
-      {/* Header */}
+    <div className="min-h-screen pb-12" style={{ background: '#0d0d1a' }}>
       <header className="sticky top-0 z-40 glass-strong border-b border-white/8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -93,7 +99,6 @@ export default function EventDetails() {
       </header>
 
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
-        {/* Event info card */}
         <div className="card animate-fade-up">
           <h1 className="text-2xl font-bold text-white mb-1">{event.name}</h1>
           {event.description && (
@@ -125,7 +130,7 @@ export default function EventDetails() {
                 <div className="text-white text-sm font-medium">{event.venue}</div>
               </div>
             </div>
-
+            
             <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4">
               <div className="w-8 h-8 rounded-lg bg-ink-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Clock size={14} className="text-ink-400" />
@@ -135,85 +140,117 @@ export default function EventDetails() {
                 <div className="text-white text-sm font-medium">{fmtDuration(event.duration)}</div>
               </div>
             </div>
-
+            
             <div className="flex items-start gap-3 p-3 rounded-xl bg-white/4">
               <div className="w-8 h-8 rounded-lg bg-ink-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Users size={14} className="text-ink-400" />
               </div>
               <div>
-                <div className="text-white/40 text-xs mb-0.5">Participants</div>
+                <div className="text-white/40 text-xs mb-0.5">Interactions</div>
                 <div className="text-white text-sm font-medium">
-                  {event.teams.length} member{event.teams.length !== 1 ? 's' : ''} · {teamGroups.length} team{teamGroups.length !== 1 ? 's' : ''}
+                  {event.registrations.length} registrations, {event.organizers.length} organizers
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Teams section */}
-        {teamGroups.length > 0 && (
+        {event.organizers.length > 0 && (
           <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
             <h2 className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-4">
-              Participating Teams
+              Organizing Committee
             </h2>
-            <div className="space-y-3">
-              {teamGroups.map(([teamName, members], i) => {
-                const organizers = members.filter(m => m.role === 'organizer')
-                const regular = members.filter(m => m.role !== 'organizer')
-
-                return (
-                  <div key={teamName} className="card animate-fade-up opacity-0"
-                    style={{ animationDelay: `${i * 0.05 + 0.15}s` }}>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-white font-semibold">{teamName}</h3>
-                      <span className="tag bg-ink-500/15 text-ink-300 text-xs">
-                        {members.length} member{members.length !== 1 ? 's' : ''}
-                      </span>
+            <div className="card">
+              <div className="space-y-3">
+                {event.organizers.map(o => (
+                  <div key={o.id} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                    <Crown size={16} className="text-amber-400" />
+                    <div>
+                      <div className="text-white font-medium">{o.student.name}</div>
+                      <div className="text-white/40 text-xs">{o.student.email} • {o.student.registrationNo} • {o.student.className}</div>
                     </div>
-
-                    {organizers.length > 0 && (
-                      <div className="mb-3">
-                        <div className="text-xs text-white/30 uppercase tracking-wider mb-2">Organizers</div>
-                        <div className="flex flex-wrap gap-2">
-                          {organizers.map(m => (
-                            <div key={m.id} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/20">
-                              <Crown size={11} className="text-amber-400" />
-                              <span className="text-amber-300 text-sm font-medium">{m.memberName}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {regular.length > 0 && (
-                      <div>
-                        {organizers.length > 0 && <div className="text-xs text-white/30 uppercase tracking-wider mb-2">Members</div>}
-                        <div className="flex flex-wrap gap-2">
-                          {regular.map(m => (
-                            <div key={m.id}
-                              className="px-3 py-1.5 rounded-full bg-white/5 border border-white/8 text-white/60 text-sm">
-                              {m.memberName}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
-                )
-              })}
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {teamGroups.length === 0 && (
-          <div className="card text-center py-8 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-            <Users size={28} className="text-white/15 mx-auto mb-3" />
-            <p className="text-white/30 text-sm">No teams added yet</p>
-            <Link to={`/events/${id}/edit`} className="inline-flex items-center gap-1.5 text-ink-400 hover:text-ink-300 text-sm font-medium mt-3 transition-colors">
-              <Edit3 size={13} />Add teams
-            </Link>
+        {pendingRegs.length > 0 && (
+          <div className="animate-fade-up" style={{ animationDelay: '0.1s' }}>
+            <h2 className="text-xs font-semibold text-amber-500/80 uppercase tracking-widest mb-4 flex items-center gap-2">
+              <AlertTriangle size={14} /> Pending Registrations
+            </h2>
+            <div className="space-y-3">
+              {pendingRegs.map(r => (
+                <div key={r.id} className="card border-amber-500/30 bg-amber-500/5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      {r.teamName && <h3 className="text-white font-semibold mb-2">{r.teamName}</h3>}
+                      <div className="space-y-2">
+                        {r.members.map(m => (
+                          <div key={m.id} className="text-sm text-white/70">
+                            • {m.student.name} (<span className="text-white/40">{m.student.registrationNo}</span>, {m.student.className})
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button 
+                        disabled={updating === r.id}
+                        onClick={() => verifyRegistration(r.id, 'REJECTED')}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-red-500/10 text-red-400 hover:bg-red-500/20 font-medium transition-colors"
+                      >
+                        Reject
+                      </button>
+                      <button
+                        disabled={updating === r.id}
+                        onClick={() => verifyRegistration(r.id, 'VERIFIED')}
+                        className="px-3 py-1.5 rounded-lg text-sm bg-mint-400/10 text-mint-400 hover:bg-mint-400/20 font-medium transition-colors flex items-center gap-1"
+                      >
+                        <CheckCircle2 size={14} /> Verify
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
+
+        {verifiedRegs.length > 0 && (
+          <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
+            <h2 className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-4 relative z-10">
+              Processed / Verified
+            </h2>
+            <div className="space-y-3 relative z-10">
+              {verifiedRegs.map(r => (
+                <div key={r.id} className={`card ${r.status === 'VERIFIED' ? 'border-mint-500/20' : 'border-red-500/20'} opacity-70 hover:opacity-100 transition-opacity`}>
+                   <div className="flex items-start justify-between">
+                    <div>
+                      {r.teamName && <h3 className="text-white font-semibold mb-2">{r.teamName}</h3>}
+                      <div className="space-y-2">
+                        {r.members.map(m => (
+                          <div key={m.id} className="text-sm text-white/70">
+                            • {m.student.name} (<span className="text-white/40">{m.student.registrationNo}</span>)
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      {r.status === 'VERIFIED' ? (
+                        <span className="tag bg-mint-400/10 text-mint-400 border border-mint-400/20"><CheckCircle2 size={12} className="mr-1 inline" /> Verified</span>
+                      ) : (
+                        <span className="tag bg-red-500/10 text-red-500 border border-red-500/20"><XCircle size={12} className="mr-1 inline" /> Rejected</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
       </main>
 
       {/* Delete modal */}
@@ -233,7 +270,7 @@ export default function EventDetails() {
               </div>
             </div>
             <p className="text-white/60 text-sm mb-5">
-              All team members and data for <span className="text-white font-medium">"{event.name}"</span> will be permanently deleted.
+              All registrations and data for <span className="text-white font-medium">"{event.name}"</span> will be permanently deleted.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowDelete(false)} className="btn-ghost flex-1 text-sm">Cancel</button>

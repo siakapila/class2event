@@ -1,16 +1,31 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Eye, EyeOff, Mail, Lock, Zap } from 'lucide-react'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const role = searchParams.get('role') || 'student'
+
+  // If no valid role, redirect to role selection
+  useEffect(() => {
+    if (!['student', 'club', 'teacher'].includes(role)) {
+      navigate('/role-selection')
+    }
+  }, [role, navigate])
+
   const { login } = useAuth()
   const [form, setForm] = useState({ email: '', password: '', rememberMe: false })
   const [showPw, setShowPw] = useState(false)
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState('')
+
+  const getDomainDesc = () => {
+    if (role === 'teacher') return '@jaipur.manipal.edu'
+    return '@muj.manipal.edu'
+  }
 
   const validate = () => {
     const e = {}
@@ -28,8 +43,8 @@ export default function Login() {
     setErrors({})
     setLoading(true)
     try {
-      await login(form.email, form.password, form.rememberMe)
-      navigate('/dashboard')
+      await login(role, form.email, form.password, form.rememberMe)
+      navigate('/dashboard') // unified dashboard that redirects/renders based on role
     } catch (err) {
       setApiError(err.response?.data?.error || 'Login failed. Please try again.')
     } finally {
@@ -46,18 +61,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left decorative panel */}
       <div className="hidden lg:flex flex-col justify-between w-[42%] relative overflow-hidden p-12"
         style={{ background: 'linear-gradient(135deg, #1a0f57 0%, #2d1a8c 40%, #0d1a4a 100%)' }}>
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(98,70,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.2) 0%, transparent 50%)',
-        }} />
-        {/* Floating orbs */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-20 animate-float"
-          style={{ background: 'radial-gradient(circle, #6246ff, transparent)' }} />
-        <div className="absolute bottom-1/3 right-1/4 w-48 h-48 rounded-full opacity-15 animate-float"
-          style={{ background: 'radial-gradient(circle, #38bdf8, transparent)', animationDelay: '2s' }} />
-
+        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(98,70,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.2) 0%, transparent 50%)' }} />
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-20 animate-float" style={{ background: 'radial-gradient(circle, #6246ff, transparent)' }} />
+        
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-9 h-9 bg-ink-500 rounded-xl flex items-center justify-center">
@@ -69,38 +77,22 @@ export default function Login() {
 
         <div className="relative z-10">
           <h1 className="text-4xl font-bold text-white leading-tight mb-4">
-            Manage club events<br />
+            Manage your events<br />
             <span className="gradient-text">like never before</span>
           </h1>
           <p className="text-white/50 text-base leading-relaxed">
-            Schedule events, manage teams, and coordinate your club activities from one beautiful dashboard.
+            The platform for clubs to manage events, students to participate, and teachers to coordinate.
           </p>
-        </div>
-
-        <div className="relative z-10 flex gap-4">
-          {[['150+', 'Clubs'], ['2K+', 'Events'], ['10K+', 'Members']].map(([n, l]) => (
-            <div key={l} className="glass rounded-xl p-4 flex-1 text-center">
-              <div className="text-white font-bold text-xl">{n}</div>
-              <div className="text-white/40 text-xs mt-0.5">{l}</div>
-            </div>
-          ))}
         </div>
       </div>
 
       {/* Right form */}
       <div className="flex-1 flex items-center justify-center p-6" style={{ background: '#0d0d1a' }}>
         <div className="w-full max-w-md animate-fade-up">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-10 lg:hidden">
-            <div className="w-8 h-8 bg-ink-500 rounded-xl flex items-center justify-center">
-              <Zap size={16} className="text-white" />
-            </div>
-            <span className="text-white font-bold text-lg">class2event</span>
-          </div>
-
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-white mb-1.5">Welcome back</h2>
-            <p className="text-white/40 text-sm">Sign in to your club dashboard</p>
+          <div className="mb-6">
+            <Link to="/role-selection" className="inline-block text-ink-400 text-sm hover:underline mb-4">&larr; Change role</Link>
+            <h2 className="text-2xl font-bold text-white mb-1.5 capitalize">{role} Login</h2>
+            <p className="text-white/40 text-sm">Sign in with your {getDomainDesc()} account</p>
           </div>
 
           {apiError && (
@@ -116,7 +108,7 @@ export default function Login() {
                 <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
                 <input
                   type="email"
-                  placeholder="club@university.edu"
+                  placeholder={`user${getDomainDesc()}`}
                   value={form.email}
                   onChange={set('email')}
                   className={`input-field pl-10 ${errors.email ? 'border-red-500/50 bg-red-500/5' : ''}`}
@@ -165,9 +157,9 @@ export default function Login() {
           </form>
 
           <p className="mt-6 text-center text-sm text-white/40">
-            New to class2event?{' '}
-            <Link to="/signup" className="text-ink-400 hover:text-ink-300 font-medium transition-colors">
-              Create your club account
+            Don't have an account?{' '}
+            <Link to={`/signup?role=${role}`} className="text-ink-400 hover:text-ink-300 font-medium transition-colors">
+              Create an account
             </Link>
           </p>
         </div>

@@ -8,8 +8,8 @@ import {
   Zap, Search, Trash2, Edit3, ChevronRight, AlertTriangle
 } from 'lucide-react'
 
-export default function Dashboard() {
-  const { club, logout } = useAuth()
+export default function ClubDashboard() {
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -88,7 +88,7 @@ export default function Dashboard() {
             </div>
             <div>
               <span className="text-white font-bold text-sm">class2event</span>
-              <div className="text-white/30 text-xs leading-none">{club?.name}</div>
+              <div className="text-white/30 text-xs leading-none">{user?.name}</div>
             </div>
           </div>
           <div className="flex items-center gap-2">

@@ -4,46 +4,55 @@ import api from '../lib/api'
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-  const [club, setClub] = useState(null)
+  const [user, setUser] = useState(null)
+  const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('c2e_token')
-    const saved = localStorage.getItem('c2e_club')
-    if (token && saved) {
-      try {
-        setClub(JSON.parse(saved))
-      } catch {}
+    const checkAuth = async () => {
+      const token = localStorage.getItem('c2e_token')
+      if (token) {
+        try {
+          const res = await api.get('/api/auth/me')
+          setUser(res.data.user)
+          setRole(res.data.role)
+        } catch {
+          // Token invalid or expired
+          localStorage.removeItem('c2e_token')
+        }
+      }
+      setLoading(false)
     }
-    setLoading(false)
+    checkAuth()
   }, [])
 
-  const login = async (email, password, rememberMe) => {
-    const res = await api.post('/api/auth/login', { email, password, rememberMe })
-    const { token, club } = res.data
+  const login = async (roleType, email, password, rememberMe) => {
+    const res = await api.post(`/api/auth/${roleType}/login`, { email, password, rememberMe })
+    const { token, user: userData, role: userRole } = res.data
     localStorage.setItem('c2e_token', token)
-    localStorage.setItem('c2e_club', JSON.stringify(club))
-    setClub(club)
-    return club
+    setUser(userData)
+    setRole(userRole)
+    return { user: userData, role: userRole }
   }
 
-  const signup = async (clubName, email, password) => {
-    const res = await api.post('/api/auth/signup', { clubName, email, password })
-    const { token, club } = res.data
+  const signup = async (roleType, payload) => {
+    // payload depends on the role
+    const res = await api.post(`/api/auth/${roleType}/signup`, payload)
+    const { token, user: userData, role: userRole } = res.data
     localStorage.setItem('c2e_token', token)
-    localStorage.setItem('c2e_club', JSON.stringify(club))
-    setClub(club)
-    return club
+    setUser(userData)
+    setRole(userRole)
+    return { user: userData, role: userRole }
   }
 
   const logout = () => {
     localStorage.removeItem('c2e_token')
-    localStorage.removeItem('c2e_club')
-    setClub(null)
+    setUser(null)
+    setRole(null)
   }
 
   return (
-    <AuthContext.Provider value={{ club, login, signup, logout, loading }}>
+    <AuthContext.Provider value={{ user, role, login, signup, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )
