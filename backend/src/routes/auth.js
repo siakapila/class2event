@@ -2,6 +2,8 @@ import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { prisma } from '../lib/prisma.js'
+import { v4 as uuidv4 } from 'uuid'
+import { sendVerificationEmail } from '../lib/email.js'
 
 const router = Router()
 
@@ -29,11 +31,21 @@ router.post('/club/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12)
     const club = await prisma.club.create({
       data: { name: clubName, email, password: hashedPassword },
-      select: { id: true, name: true, email: true, createdAt: true }
+      select: { id: true, name: true, email: true, createdAt: true, isVerified: true }
     })
 
-    const token = jwt.sign({ userId: club.id, role: 'club' }, process.env.JWT_SECRET, { expiresIn: '7d' })
-    res.status(201).json({ token, user: club, role: 'club' })
+    const verificationToken = uuidv4()
+    await prisma.verificationToken.create({
+      data: {
+        token: verificationToken,
+        userId: club.id,
+        role: 'club',
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+      }
+    })
+    await sendVerificationEmail(email, verificationToken)
+
+    res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.', user: club, role: 'club' })
   } catch (err) {
     console.error('Club signup error:', err)
     res.status(500).json({ error: 'Server error during signup' })
@@ -83,11 +95,21 @@ router.post('/student/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12)
     const student = await prisma.student.create({
       data: { name, email, password: hashedPassword, registrationNo, className, year: parseInt(year) },
-      select: { id: true, name: true, email: true, registrationNo: true, className: true, year: true }
+      select: { id: true, name: true, email: true, registrationNo: true, className: true, year: true, isVerified: true }
     })
 
-    const token = jwt.sign({ userId: student.id, role: 'student' }, process.env.JWT_SECRET, { expiresIn: '7d' })
-    res.status(201).json({ token, user: student, role: 'student' })
+    const verificationToken = uuidv4()
+    await prisma.verificationToken.create({
+      data: {
+        token: verificationToken,
+        userId: student.id,
+        role: 'student',
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+      }
+    })
+    await sendVerificationEmail(email, verificationToken)
+
+    res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.', user: student, role: 'student' })
   } catch (err) {
     console.error('Student signup error:', err)
     res.status(500).json({ error: 'Server error during signup' })
@@ -130,11 +152,21 @@ router.post('/teacher/signup', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 12)
     const teacher = await prisma.teacher.create({
       data: { name, email, password: hashedPassword },
-      select: { id: true, name: true, email: true }
+      select: { id: true, name: true, email: true, isVerified: true }
     })
 
-    const token = jwt.sign({ userId: teacher.id, role: 'teacher' }, process.env.JWT_SECRET, { expiresIn: '7d' })
-    res.status(201).json({ token, user: teacher, role: 'teacher' })
+    const verificationToken = uuidv4()
+    await prisma.verificationToken.create({
+      data: {
+        token: verificationToken,
+        userId: teacher.id,
+        role: 'teacher',
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+      }
+    })
+    await sendVerificationEmail(email, verificationToken)
+
+    res.status(201).json({ message: 'Registration successful. Please check your email to verify your account.', user: teacher, role: 'teacher' })
   } catch (err) {
     console.error('Teacher signup error:', err)
     res.status(500).json({ error: 'Server error during signup' })
@@ -188,6 +220,71 @@ router.get('/me', async (req, res) => {
     res.json({ user, role })
   } catch (err) {
     res.status(401).json({ error: 'Invalid token' })
+  }
+})
+
+router.get('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query
+    if (!token) return res.status(400).json({ error: 'Token is required' })
+
+    const verification = await prisma.verificationToken.findUnique({ where: { token } })
+    if (!verification) return res.status(400).json({ error: 'Invalid or expired token' })
+    if (verification.used) return res.status(400).json({ error: 'Token has already been used' })
+    if (new Date() > verification.expiresAt) return res.status(400).json({ error: 'Token has expired. Please request a new one.' })
+
+    // Update user based on role
+    if (verification.role === 'club') {
+      await prisma.club.update({ where: { id: verification.userId }, data: { isVerified: true } })
+    } else if (verification.role === 'student') {
+      await prisma.student.update({ where: { id: verification.userId }, data: { isVerified: true } })
+    } else if (verification.role === 'teacher') {
+      await prisma.teacher.update({ where: { id: verification.userId }, data: { isVerified: true } })
+    }
+
+    await prisma.verificationToken.update({ where: { id: verification.id }, data: { used: true } })
+
+    // Instead of res.json, redirect to a frontend page handling success. If frontend doesn't have one, just return HTML.
+    res.status(200).send(`
+      <div style="font-family: Arial, sans-serif; text-align: center; padding: 50px;">
+        <h2 style="color: #4CAF50;">Email Verified Successfully!</h2>
+        <p>You can now go back to the app and login.</p>
+      </div>
+    `)
+  } catch (err) {
+    console.error('Verify email error:', err)
+    res.status(500).json({ error: 'Server error during verification' })
+  }
+})
+
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email, role } = req.body
+    if (!email || !role) return res.status(400).json({ error: 'Email and role are required' })
+
+    let user = null
+    if (role === 'club') user = await prisma.club.findUnique({ where: { email } })
+    if (role === 'student') user = await prisma.student.findUnique({ where: { email } })
+    if (role === 'teacher') user = await prisma.teacher.findUnique({ where: { email } })
+
+    if (!user) return res.status(404).json({ error: 'User not found' })
+    if (user.isVerified) return res.status(400).json({ error: 'Account is already verified' })
+
+    const verificationToken = uuidv4()
+    await prisma.verificationToken.create({
+      data: {
+        token: verificationToken,
+        userId: user.id,
+        role,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+      }
+    })
+    await sendVerificationEmail(email, verificationToken)
+
+    res.json({ message: 'Verification email sent successfully' })
+  } catch (err) {
+    console.error('Resend verification error:', err)
+    res.status(500).json({ error: 'Server error' })
   }
 })
 
