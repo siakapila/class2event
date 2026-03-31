@@ -11,20 +11,35 @@ export const authenticate = async (req, res, next) => {
     const token = authHeader.split(' ')[1]
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
-    req.user = {
-      id: decoded.userId || decoded.clubId,
-      role: decoded.role || 'club'
+    const userId = decoded.userId || decoded.clubId
+    const role = decoded.role || 'club'
+    let dbUser = null
+
+    if (role === 'club') {
+      dbUser = await prisma.club.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, isVerified: true } })
+    } else if (role === 'student') {
+      dbUser = await prisma.student.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, registrationNo: true, className: true, year: true, isVerified: true } })
+    } else if (role === 'teacher') {
+      dbUser = await prisma.teacher.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, isVerified: true } })
     }
 
-    // Keep backwards compatibility for legacy club requests
-    if (req.user.role === 'club') {
-      const club = await prisma.club.findUnique({
-        where: { id: req.user.id },
-        select: { id: true, name: true, email: true }
-      })
-      if (!club) return res.status(401).json({ error: 'Club not found' })
-      req.club = club
+    if (!dbUser) {
+      return res.status(401).json({ error: 'User not found or deleted' })
     }
+
+    // Require verification for all protected endpoints
+    if (!dbUser.isVerified) {
+      return res.status(403).json({ error: 'Please verify your email to access this feature' })
+    }
+
+    req.user = {
+      id: userId,
+      role: role,
+      ...dbUser
+    }
+
+    // Keep backwards compatibility for legacy club requests relying on req.club
+    if (role === 'club') req.club = dbUser
 
     next()
   } catch (err) {

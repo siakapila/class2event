@@ -209,11 +209,11 @@ router.get('/me', async (req, res) => {
     const role = decoded.role || 'club'
 
     if (role === 'club') {
-      user = await prisma.club.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true } })
+      user = await prisma.club.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, isVerified: true } })
     } else if (role === 'student') {
-      user = await prisma.student.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, registrationNo: true, className: true, year: true } })
+      user = await prisma.student.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, registrationNo: true, className: true, year: true, isVerified: true } })
     } else if (role === 'teacher') {
-      user = await prisma.teacher.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true } })
+      user = await prisma.teacher.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, isVerified: true } })
     }
 
     if (!user) return res.status(404).json({ error: 'User not found' })
