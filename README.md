@@ -1,151 +1,90 @@
-<<<<<<< HEAD
-# class2event — Club Event Management System
-
-A modern full-stack web app for managing club events, teams, and members.
-
----
-
-## Tech Stack
-
-**Frontend:** React 18 · Vite 5 · Tailwind CSS 3 · React Router DOM 6  
-**Backend:** Node.js · Express 4 · Prisma 5 ORM  
-**Database:** PostgreSQL (NeonDB)
-
----
-
-## Project Structure
-
-```
-class2event/
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── Login.jsx          # Auth - login with remember me
-│   │   │   ├── Signup.jsx         # Auth - signup with pw strength
-│   │   │   ├── Dashboard.jsx      # Event list with search & stats
-│   │   │   ├── CreateEvent.jsx    # Create/edit event + teams
-│   │   │   └── EventDetails.jsx   # View event details + teams
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx    # Global auth state
-│   │   ├── lib/
-│   │   │   └── api.js             # Axios instance with auth interceptor
-│   │   ├── App.jsx                # Routes (protected + guest)
-│   │   └── main.jsx
-│   ├── tailwind.config.js
-│   ├── vite.config.js
-│   └── .env
-│
-└── backend/
-    ├── prisma/
-    │   └── schema.prisma          # clubs, events, team_members tables
-    ├── src/
-    │   ├── routes/
-    │   │   ├── auth.js            # POST /signup, /login, GET /me
-    │   │   └── events.js          # CRUD /api/events
-    │   ├── middleware/
-    │   │   └── auth.js            # JWT authentication middleware
-    │   ├── lib/
-    │   │   └── prisma.js          # Prisma client singleton
-    │   └── index.js               # Express app entry
-    └── .env
-=======
 # Class2Event – Club Event Management Platform
 
-A full-stack web application that helps college clubs organize and manage events efficiently. The platform allows clubs to create events, manage participating teams, and track event schedules through a modern dashboard.
+A production-grade, full-stack web application designed for organizing and managing university events with a strict 3-way Role-Based Access Control (RBAC) system for Clubs, Students, and Teachers.
 
 ![React](https://img.shields.io/badge/Frontend-React-blue)
 ![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
 ![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue)
-![License](https://img.shields.io/badge/License-MIT-yellow)
-
----
-## Preview
-
-<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/520f2fd5-d7b8-4e35-b866-d8dc43519ada" />
-
+![Security](https://img.shields.io/badge/Security-Hardened-red)
+![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
 
 ---
 
-##  Key Features
+## 🚀 Key Features & Security Upgrades
 
-- Secure authentication system  
-- Event creation and tracking  
-- Team participation management  
-- Modern dashboard UI  
-- Responsive design  
-
----
-
-##  Authentication
-
-- Login page with email and password  
-- Signup page for club registration  
-- Form validation and error handling  
+- **Strict 3-Way Authentication**: Separate login/signup flows for Clubs, Students (`@muj.manipal.edu`), and Teachers (`@jaipur.manipal.edu`).
+- **Email Verification**: Single-use, expiring UUID tokens sent via email (Nodemailer/Ethereal) to verify accounts before granting access to protected routes.
+- **Hardened Security**: 
+  - Password hashing via `bcryptjs`.
+  - Stateless JWT authentication validated against the live database on every request to prevent replay attacks.
+  - Rate Limiting (`express-rate-limit`) to prevent brute-force and credential stuffing.
+  - HTTP Security Headers (`helmet`) and Parameter Pollution protection (`hpp`).
+- **Event Management**: Create, view, and manage events and team participations securely.
+- **Dockerized Infrastructure**: Effortlessly spin up the entire backend and PostgreSQL database using Docker Compose.
 
 ---
 
-##  Event Management
+## 🛡️ Authentication Flow
 
-- Create and manage events  
-- Add venue, date, and time  
-- Track event duration  
-- Add detailed descriptions  
-
----
-
-##  Team Management
-
-- Add multiple teams to events  
-- Add or remove members  
-- Organized team structure  
+1. **Signup**: Users register matching their specific domain requirement. The system hashes the password, creates an `unverified` account, and dispatches an email containing a secure token.
+2. **Verification**: Users click the emailed link (`/api/auth/verify-email?token=...`). The token is validated (checked for reuse/expiration), the user is marked as verified, and the token is burned.
+3. **Login**: Users log in to receive a JWT access token. 
+4. **Protected Access**: The backend middleware intercepts requests, extracts the JWT, and queries the database to ensure the user still exists, has the correct role, and is fully verified. If not, access is strictly denied (`403 Forbidden`).
 
 ---
 
-##  Design Features
+## 🐳 Docker Deployment (Recommended)
 
-- Modern UI with Tailwind CSS  
-- Gradient backgrounds  
-- Responsive design  
-- Smooth animations  
-
----
-
-##  Tech Stack
-
-**Frontend**
-- React
-- Tailwind CSS
-- React Router
-- Vite
-
-**Backend**
-- Node.js
-- Express.js
-
-**Database**
-- PostgreSQL (NeonDB)
-
-**ORM**
-- Prisma
-
----
-
-##  Getting Started
-
-### Installation
-
-Clone the repository
+You can spin up the entire backend environment (Node.js API + PostgreSQL database) using Docker.
 
 ```bash
-git clone https://github.com/shrutayyy07/class2event.git
-cd class2event
-npm install
-npm run dev
-
+docker-compose up -d --build
 ```
-## Open in browser: http://localhost:5173
+
+The API will be available at `http://localhost:3001` and connected to the isolated Postgres container automatically.
 
 ---
+
+## 🛠️ Manual Development Setup
+
+### 1. Clone and Install
+
+```bash
+git clone https://github.com/siakapila/class2event.git
+cd class2event
+npm run install:all
+```
+
+### 2. Configure Environment
+
+Copy the example environment file in the backend:
+```bash
+cp backend/.env.example backend/.env
+```
+Fill in the `DATABASE_URL` and `JWT_SECRET`. By default, the email system will use Ethereal (a safe, fake SMTP generator) if you don't provide SendGrid/AWS keys.
+
+In the frontend, create `frontend/.env`:
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+### 3. Database Setup
+
+```bash
+cd backend
+npm run prisma:generate
+npm run prisma:push
+```
+
+### 4. Run Development Servers
+
+From the root directory, start both frontend and backend concurrently:
+```bash
+npm run dev
+```
+
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:3001
 
 ---
 
@@ -153,213 +92,14 @@ npm run dev
 
 ```
 class2event/
-│
 ├── backend/
-│   ├── prisma/
-│   │   └── schema.prisma
+│   ├── prisma/             # Database Schema (ORM)
 │   ├── src/
-│   ├── .env
-│   ├── package.json
-│   └── package-lock.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── lib/
-│   │   │   └── api.js
-│   │   ├── pages/
-│   │   │   ├── CreateEvent.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── EventDetails.jsx
-│   │   │   ├── Login.jsx
-│   │   │   └── Signup.jsx
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── index.css
-│   │
-│   ├── index.html
-│   ├── tailwind.config.js
-│   ├── postcss.config.js
-│   ├── vite.config.js
+│   │   ├── lib/            # Email and Prisma singletons
+│   │   ├── middleware/     # Strict RBAC & Auth middleware
+│   │   └── routes/         # Auth, Event, Student, Teacher routes
+│   ├── Dockerfile
 │   └── package.json
-│
-└── README.md
->>>>>>> 754b0967f3cb28f6dec598e3fee723505aa9cf65
+├── frontend/               # Vite + React + Tailwind
+└── docker-compose.yml      # Container Orchestration
 ```
-
----
-
-<<<<<<< HEAD
-## Quick Start
-
-### 1. Clone and Install
-
-```bash
-git clone <repo-url>
-cd class2event
-npm run install:all
-```
-
-### 2. Configure Environment
-
-**Backend** — edit `backend/.env`:
-```env
-DATABASE_URL="postgresql://user:password@ep-xxxx.neon.tech/neondb?sslmode=require"
-JWT_SECRET="your-super-secret-jwt-key-min-32-chars"
-PORT=3001
-FRONTEND_URL=http://localhost:5173
-```
-
-Get your NeonDB URL from: https://console.neon.tech
-
-**Frontend** — edit `frontend/.env`:
-```env
-VITE_API_URL=http://localhost:3001
-```
-
-### 3. Set Up Database
-
-```bash
-npm run prisma:generate   # Generate Prisma client
-npm run prisma:push       # Push schema to NeonDB
-npm run prisma:studio     # (optional) Open Prisma Studio
-```
-
-### 4. Run Development Servers
-
-```bash
-npm run dev
-```
-
-- Frontend: http://localhost:5173  
-- Backend: http://localhost:3001  
-- Health check: http://localhost:3001/health
-
----
-
-## Database Schema
-
-### `clubs`
-| Field     | Type     | Notes          |
-|-----------|----------|----------------|
-| id        | cuid     | Primary key    |
-| name      | String   | Unique         |
-| email     | String   | Unique         |
-| password  | String   | bcrypt hashed  |
-| createdAt | DateTime |                |
-
-### `events`
-| Field       | Type     | Notes                  |
-|-------------|----------|------------------------|
-| id          | cuid     | Primary key            |
-| name        | String   |                        |
-| venue       | String   |                        |
-| date        | DateTime |                        |
-| duration    | Int      | Minutes                |
-| description | String?  | Optional               |
-| clubId      | String   | FK → clubs             |
-
-### `team_members`
-| Field      | Type   | Notes                     |
-|------------|--------|---------------------------|
-| id         | cuid   | Primary key               |
-| teamName   | String | Groups members into teams |
-| memberName | String |                           |
-| role       | String | `member` or `organizer`   |
-| eventId    | String | FK → events               |
-
----
-
-## API Endpoints
-
-### Auth
-- `POST /api/auth/signup` — Register club `{ clubName, email, password }`
-- `POST /api/auth/login` — Login `{ email, password, rememberMe }`
-- `GET /api/auth/me` — Get current club (Bearer token)
-
-### Events (all require `Authorization: Bearer <token>`)
-- `GET /api/events` — List all events
-- `GET /api/events/:id` — Get single event with teams
-- `POST /api/events` — Create event
-- `PUT /api/events/:id` — Update event
-- `DELETE /api/events/:id` — Delete event
-
----
-
-## Features
-
-- ✅ Authentication (signup/login/logout + remember me)
-- ✅ Password strength indicator
-- ✅ Protected & guest routes
-- ✅ Create/edit/delete events
-- ✅ Date, time & duration pickers
-- ✅ Dynamic team & member management
-- ✅ Organizer role per member
-- ✅ Event search & filtering
-- ✅ Upcoming vs past event grouping
-- ✅ Delete confirmation modals
-- ✅ Mobile-responsive UI
-- ✅ JWT auth with auto-logout on expiry
-- ✅ Error handling & validation (client + server)
-=======
-## How It Works
-
-1. Users create an account or log in through the authentication system.
-2. Authenticated users can create and manage events.
-3. Each event stores details like venue, date, duration, and description.
-4. Teams and members can be added to events dynamically.
-5. The dashboard displays upcoming and past events for easy tracking.
-
----
-
-## Future Enhancements
-
-- Email notifications for events
-- Advanced analytics dashboard
-- Event reminders
-- Export event data
-- Role-based admin controls
-
----
-
-## Contributing
-
-Contributions are welcome!
-
-1. Fork the repository
-2. Create a new branch
-
-```
-git checkout -b feature-name
-```
-
-3. Commit your changes
-
-```
-git commit -m "Add new feature"
-```
-
-4. Push to your branch
-
-```
-git push origin feature-name
-```
-
-5. Open a Pull Request
-
----
-
-## License
-
-This project is licensed under the **MIT License**.
-
----
-
-## Author
-
-**Shruti**
-
-GitHub:  
-https://github.com/shrutayyy07
->>>>>>> 754b0967f3cb28f6dec598e3fee723505aa9cf65

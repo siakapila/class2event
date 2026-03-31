@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: c2e_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: supersecretpassword
+      POSTGRES_DB: class2event_docker
+    ports:
+      - "5432:5432"
+    volumes:
+      - c2e_pg_data:/var/lib/postgresql/data
+    networks:
+      - c2e_network
+
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: c2e_backend
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:supersecretpassword@postgres:5432/class2event_docker
+      - JWT_SECRET=production_supersecretkey123
+      # Optionally add email SMTP keys here:
+      # - SMTP_HOST=smtp.sendgrid.net
+      # - SMTP_PORT=587
+      # - SMTP_SECURE=false
+      # - SMTP_USER=apikey
+      # - SMTP_PASS=your_sendgrid_key
+    networks:
+      - c2e_network
+
+volumes:
+  c2e_pg_data:
+
+networks:
+  c2e_network:
+    driver: bridge

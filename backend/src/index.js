@@ -5,11 +5,27 @@ import authRoutes from './routes/auth.js'
 import eventRoutes from './routes/events.js'
 import studentRoutes from './routes/student.js'
 import teacherRoutes from './routes/teacher.js'
+import helmet from 'helmet'
+import hpp from 'hpp'
+import rateLimit from 'express-rate-limit'
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// Middleware
+// Global Security Middleware
+app.use(helmet()) // Sets secure HTTP headers
+app.use(hpp())    // Protects against HTTP Parameter Pollution attacks
+
+// Auth Rate Limiter to prevent brute force & credential stuffing
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 requests per window (for auth routes)
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many authentication attempts from this IP, please try again in 15 minutes.' }
+})
+
+// Standard Middleware
 app.use(cors({
   origin: process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',') : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true
@@ -23,7 +39,7 @@ app.get('/health', (req, res) => {
 })
 
 // Routes
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', authLimiter, authRoutes)
 app.use('/api/events', eventRoutes)
 app.use('/api/student', studentRoutes)
 app.use('/api/teacher', teacherRoutes)
