@@ -77,7 +77,7 @@ router.post('/student/signup', async (req, res) => {
     })
     if (existing) {
       if (existing.email === email) return res.status(409).json({ error: 'Email already registered' })
-      return res.status(409).json({ error: 'Registration number already taken' })
+      if (existing.registrationNo === registrationNo) return res.status(409).json({ error: 'Registration number already taken' })
     }
 
     const hashedPassword = await bcrypt.hash(password, 12)
