@@ -44,7 +44,7 @@ export default function Login() {
     setLoading(true)
     try {
       await login(role, form.email, form.password, form.rememberMe)
-      navigate('/dashboard') // unified dashboard that redirects/renders based on role
+      navigate('/dashboard')
     } catch (err) {
       setApiError(err.response?.data?.error || 'Login failed. Please try again.')
     } finally {
@@ -60,109 +60,94 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden lg:flex flex-col justify-between w-[42%] relative overflow-hidden p-12"
-        style={{ background: 'linear-gradient(135deg, #1a0f57 0%, #2d1a8c 40%, #0d1a4a 100%)' }}>
-        <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(98,70,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(56,189,248,0.2) 0%, transparent 50%)' }} />
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 rounded-full opacity-20 animate-float" style={{ background: 'radial-gradient(circle, #6246ff, transparent)' }} />
-        
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 bg-ink-500 rounded-xl flex items-center justify-center">
-              <Zap size={18} className="text-white" />
-            </div>
-            <span className="text-white font-bold text-xl tracking-tight">class2event</span>
-          </div>
-        </div>
-
-        <div className="relative z-10">
-          <h1 className="text-4xl font-bold text-white leading-tight mb-4">
-            Manage your events<br />
-            <span className="gradient-text">like never before</span>
-          </h1>
-          <p className="text-white/50 text-base leading-relaxed">
-            The platform for clubs to manage events, students to participate, and teachers to coordinate.
-          </p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center p-4 lg:p-12 overflow-hidden bg-transparent">
+      {/* Playful background floaters */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden flex justify-between items-center px-10">
+        <div className="w-[400px] h-[400px] rounded-full bg-white/5 backdrop-blur-md opacity-10 blur-[60px]" />
+        <div className="w-[500px] h-[500px] rounded-full bg-white/5 backdrop-blur-md opacity-10 blur-[80px]" />
       </div>
 
-      {/* Right form */}
-      <div className="flex-1 flex items-center justify-center p-6" style={{ background: '#0d0d1a' }}>
-        <div className="w-full max-w-md animate-fade-up">
-          <div className="mb-6">
-            <Link to="/role-selection" className="inline-block text-ink-400 text-sm hover:underline mb-4">&larr; Change role</Link>
-            <h2 className="text-2xl font-bold text-white mb-1.5 capitalize">{role} Login</h2>
-            <p className="text-white/40 text-sm">Sign in with your {getDomainDesc()} account</p>
+      <div className="w-full max-w-md card relative z-10 animate-fade-up">
+        
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 bg-[#FFB800] rounded-[1.2rem] flex items-center justify-center shadow-lg shadow-[#FFB800]/30 transform rotate-3">
+            <Zap size={32} className="text-white" />
+          </div>
+        </div>
+
+        <div className="text-center mb-8">
+          <Link to="/role-selection" className="inline-block text-white/40 font-bold text-sm hover:text-white transition-colors mb-2">&larr; Change Role</Link>
+          <h2 className="text-3xl font-black text-white mb-2 capitalize">{role} Login</h2>
+          <p className="text-white/60 font-bold text-sm">Sign in with your {getDomainDesc()} account</p>
+        </div>
+
+        {apiError && (
+          <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/20 border-2 border-red-500/30 text-red-400 font-bold text-sm animate-fade-in">
+            {apiError}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-bold text-white/90 mb-2">Email Address</label>
+            <div className="relative">
+              <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+              <input
+                type="email"
+                placeholder={`user${getDomainDesc()}`}
+                value={form.email}
+                onChange={set('email')}
+                className={`input-field pl-11 !py-3.5 ${errors.email ? 'border-red-300 bg-red-500/20 focus:border-red-500 focus:ring-red-200' : ''}`}
+              />
+            </div>
+            {errors.email && <p className="text-red-500 font-bold text-xs mt-2">{errors.email}</p>}
           </div>
 
-          {apiError && (
-            <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-fade-in">
-              {apiError}
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-white/60 mb-1.5">Email address</label>
-              <div className="relative">
-                <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
-                <input
-                  type="email"
-                  placeholder={`user${getDomainDesc()}`}
-                  value={form.email}
-                  onChange={set('email')}
-                  className={`input-field pl-10 ${errors.email ? 'border-red-500/50 bg-red-500/5' : ''}`}
-                />
-              </div>
-              {errors.email && <p className="text-red-400 text-xs mt-1.5">{errors.email}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-white/60 mb-1.5">Password</label>
-              <div className="relative">
-                <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
-                <input
-                  type={showPw ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={form.password}
-                  onChange={set('password')}
-                  className={`input-field pl-10 pr-11 ${errors.password ? 'border-red-500/50 bg-red-500/5' : ''}`}
-                />
-                <button type="button" onClick={() => setShowPw(v => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors">
-                  {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-              {errors.password && <p className="text-red-400 text-xs mt-1.5">{errors.password}</p>}
-            </div>
-
-            <div className="flex items-center gap-2.5">
+          <div>
+            <label className="block text-sm font-bold text-white/90 mb-2">Password</label>
+            <div className="relative">
+              <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
               <input
-                type="checkbox"
-                id="remember"
-                checked={form.rememberMe}
-                onChange={set('rememberMe')}
-                className="w-4 h-4 rounded border-white/20 bg-white/5 accent-ink-500 cursor-pointer"
+                type={showPw ? 'text' : 'password'}
+                placeholder="••••••••"
+                value={form.password}
+                onChange={set('password')}
+                className={`input-field pl-11 pr-12 !py-3.5 ${errors.password ? 'border-red-300 bg-red-500/20 focus:border-red-500 focus:ring-red-200' : ''}`}
               />
-              <label htmlFor="remember" className="text-sm text-white/50 cursor-pointer select-none">
-                Remember me for 30 days
-              </label>
+              <button type="button" onClick={() => setShowPw(v => !v)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/80 transition-colors">
+                {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
+            {errors.password && <p className="text-red-500 font-bold text-xs mt-2">{errors.password}</p>}
+          </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full mt-2 flex items-center justify-center gap-2">
-              {loading ? (
-                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Signing in...</>
-              ) : 'Sign in'}
-            </button>
-          </form>
+          <div className="flex items-center gap-3 pt-2">
+            <input
+              type="checkbox"
+              id="remember"
+              checked={form.rememberMe}
+              onChange={set('rememberMe')}
+              className="w-5 h-5 rounded border-2 border-slate-300 bg-transparent text-white focus:ring-slate-900 cursor-pointer"
+            />
+            <label htmlFor="remember" className="text-sm font-bold text-white/60 cursor-pointer select-none">
+              Remember me for 30 days
+            </label>
+          </div>
 
-          <p className="mt-6 text-center text-sm text-white/40">
-            Don't have an account?{' '}
-            <Link to={`/signup?role=${role}`} className="text-ink-400 hover:text-ink-300 font-medium transition-colors">
-              Create an account
-            </Link>
-          </p>
-        </div>
+          <button type="submit" disabled={loading} className="btn-primary w-full mt-4 flex items-center justify-center gap-2 !py-4 text-lg">
+            {loading ? (
+              <><div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Signing in...</>
+            ) : 'Sign In'}
+          </button>
+        </form>
+
+        <p className="mt-8 text-center text-sm font-bold text-white/60">
+          Don't have an account?{' '}
+          <Link to={`/signup?role=${role}`} className="text-blue-400 hover:text-blue-800 transition-colors">
+            Create an account
+          </Link>
+        </p>
       </div>
     </div>
   )

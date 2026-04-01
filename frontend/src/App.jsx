@@ -10,6 +10,7 @@ import EventDetails from './pages/EventDetails'
 // Student paths
 import StudentEvents from './pages/StudentEvents'
 import RegisterEvent from './pages/RegisterEvent'
+import AnimatedBackground from './components/AnimatedBackground'
 
 function ProtectedRoute({ children, allowedRoles }) {
   const { user, role, loading } = useAuth()
@@ -31,30 +32,33 @@ function GuestRoute({ children }) {
 
 export default function App() {
   return (
-    <div className="noise min-h-screen">
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        <Route path="/role-selection" element={<GuestRoute><RoleSelection /></GuestRoute>} />
-        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-        <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
-        
-        {/* Dynamic Dashboard Routing */}
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
-        
-        {/* Club Only Routes */}
-        <Route path="/events/new" element={<ProtectedRoute allowedRoles={['club']}><CreateEvent /></ProtectedRoute>} />
-        <Route path="/events/:id/edit" element={<ProtectedRoute allowedRoles={['club']}><CreateEvent /></ProtectedRoute>} />
-        
-        {/* Student Only Routes */}
-        <Route path="/events" element={<ProtectedRoute allowedRoles={['student']}><StudentEvents /></ProtectedRoute>} />
-        <Route path="/events/:id/register" element={<ProtectedRoute allowedRoles={['student']}><RegisterEvent /></ProtectedRoute>} />
+    <div className="min-h-screen flex flex-col font-body text-white">
+      <AnimatedBackground />
+      <div className="relative z-10 min-h-screen flex flex-col">
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          
+          <Route path="/role-selection" element={<GuestRoute><RoleSelection /></GuestRoute>} />
+          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/signup" element={<GuestRoute><Signup /></GuestRoute>} />
+          
+          {/* Dynamic Dashboard Routing */}
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
+          
+          {/* Club Only Routes */}
+          <Route path="/events/new" element={<ProtectedRoute allowedRoles={['club']}><CreateEvent /></ProtectedRoute>} />
+          <Route path="/events/:id/edit" element={<ProtectedRoute allowedRoles={['club']}><CreateEvent /></ProtectedRoute>} />
+          
+          {/* Student Only Routes */}
+          <Route path="/events" element={<ProtectedRoute allowedRoles={['student']}><StudentEvents /></ProtectedRoute>} />
+          <Route path="/events/:id/register" element={<ProtectedRoute allowedRoles={['student']}><RegisterEvent /></ProtectedRoute>} />
 
-        {/* Shared / Dynamic Views */}
-        <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
-        
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+          {/* Shared / Dynamic Views */}
+          <Route path="/events/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
+          
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </div>
     </div>
   )
 }

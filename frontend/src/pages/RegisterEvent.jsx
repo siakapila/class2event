@@ -10,7 +10,7 @@ export default function RegisterEvent() {
   const [event, setEvent] = useState(null)
   
   const [teamName, setTeamName] = useState('')
-  const [emails, setEmails] = useState(['']) // Only additional teammates. Current student is auto-included in backend.
+  const [emails, setEmails] = useState([''])
   
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -18,8 +18,6 @@ export default function RegisterEvent() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    // We can fetch single event from generic /api/events/:id but maybe clubs only?
-    // Wait, the backend doesn't have a public GET /events/:id endpoint open to students except /api/student/events
     const fetchEvent = async () => {
       try {
         const res = await api.get('/api/student/events')
@@ -35,19 +33,11 @@ export default function RegisterEvent() {
     fetchEvent()
   }, [id])
 
-  const validate = () => {
-    // If it's a team event, team name is optional but good.
-    // Ensure emails are somewhat valid format if provided.
-    // They can be blank. Filter blanks.
-    return null
-  }
-
   const handleSubmit = async (e) => {
     e.preventDefault()
     setApiError('')
     setSubmitting(true)
     
-    // Filters out blank emails
     const members = emails.filter(m => m.trim().length > 0)
     
     try {
@@ -68,94 +58,108 @@ export default function RegisterEvent() {
   const updateEmail = (i, val) => setEmails(e => e.map((str, idx) => idx === i ? val : str))
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0d0d1a' }}>
-      <div className="w-8 h-8 border-2 border-ink-500 border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen flex items-center justify-center p-6 bg-transparent">
+      <div className="w-10 h-10 border-4 border-white/10 border-t-[#FFB800] rounded-full animate-spin" />
     </div>
   )
 
   if (success) return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#0d0d1a' }}>
-       <div className="max-w-md w-full card text-center p-10 animate-fade-up">
-        <CheckCircle2 size={48} className="text-mint-400 mx-auto mb-4" />
-        <h2 className="text-2xl font-bold text-white mb-2">Registration Submitted!</h2>
-        <p className="text-white/50 mb-8">Your registration is now pending club verification.</p>
-        <Link to="/dashboard" className="btn-primary inline-flex justify-center w-full py-3">Return to Dashboard</Link>
+    <div className="min-h-screen flex items-center justify-center p-6 bg-transparent">
+       <div className="max-w-lg w-full bg-white/5 backdrop-blur-md border border-white/10 rounded-[32px] text-center p-12 animate-fade-up shadow-2xl">
+        <div className="w-24 h-24 bg-green-100 rounded-[2rem] flex items-center justify-center mx-auto mb-8 transform -rotate-3 text-green-500">
+          <CheckCircle2 size={48} />
+        </div>
+        <h2 className="text-3xl font-black text-white mb-3">Registration Submitted!</h2>
+        <p className="text-white/60 font-semibold mb-10 text-lg">Your registration is now pending club verification.</p>
+        <Link to="/dashboard" className="btn-primary inline-flex justify-center w-full !py-4 text-lg bg-slate-900 hover:bg-slate-800">Return to Dashboard</Link>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen relative" style={{ background: '#0d0d1a' }}>
-      <header className="sticky top-0 z-40 glass-strong border-b border-white/8">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-16 flex items-center">
+    <div className="min-h-screen relative bg-transparent pb-12">
+      <header className="sticky top-0 z-40 bg-white/5 backdrop-blur-md border-b border-white/10 shadow-sm">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 h-20 flex items-center gap-4">
           <button onClick={() => navigate('/events')}
-            className="p-2 mr-3 rounded-xl text-white/40 hover:text-white hover:bg-white/8 transition-all">
-            <ArrowLeft size={18} />
+            className="p-2.5 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all bg-transparent">
+            <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
-             <span className="text-white font-semibold text-sm truncate">Register for {event?.name}</span>
+             <div className="w-10 h-10 bg-[#FFB800] rounded-[1rem] flex items-center justify-center transform rotate-3 shadow-md flex-shrink-0">
+               <Zap size={20} className="text-white" />
+             </div>
+             <span className="text-white font-black text-xl truncate">Register for {event?.name}</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
         {apiError && (
-          <div className="mb-6 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm animate-fade-in">
+          <div className="mb-6 px-5 py-4 rounded-xl bg-red-500/20 border-2 border-red-500/30 text-red-400 font-bold text-sm animate-fade-in shadow-sm">
             {apiError}
           </div>
         )}
 
-        <div className="card mb-8 animate-fade-up">
-          <h2 className="text-xl font-bold text-white mb-2">{event?.name}</h2>
-          <p className="text-white/50 text-sm">{event?.club?.name}</p>
+        <div className="card mb-8 animate-fade-up !p-8">
+          <h2 className="text-2xl font-black text-white mb-2">{event?.name}</h2>
+          <p className="text-white/60 font-bold text-sm uppercase tracking-widest">{event?.club?.name}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <div className="card">
-            <h2 className="text-white font-semibold mb-4">Registration Details</h2>
+          <div className="card !p-8">
+            <h2 className="text-white font-black text-xl mb-6 flex items-center gap-3">
+              <div className="p-2 bg-blue-500/20 text-blue-400 rounded-xl">
+                <Users size={20} />
+              </div>
+              Registration Details
+            </h2>
             
-            <div className="space-y-4">
+            <div className="space-y-8">
               <div>
-                <label className="block text-sm font-medium text-white/60 mb-1.5">Team Name (Optional)</label>
+                <label className="block text-sm font-bold text-white/90 mb-2">Team Name <span className="text-white/40 font-semibold">(Optional)</span></label>
                 <input type="text" placeholder="e.g. Code Ninjas"
                   value={teamName} onChange={e => setTeamName(e.target.value)}
-                  className="input-field" />
-                <p className="text-xs text-white/30 mt-1.5">Only required if registering a group.</p>
+                  className="input-field bg-white/5 backdrop-blur-md shadow-sm !py-3.5 border-white/10" />
+                <p className="text-xs font-bold text-white/40 mt-2">Required only if registering a group.</p>
               </div>
 
-              <div className="pt-4 border-t border-white/10">
+              <div className="pt-8 border-t-2 border-white/10">
                 <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-white/60">Teammates (College Emails)</label>
+                  <label className="block text-sm font-bold text-white/90">Teammates <span className="text-white/40 font-semibold">(College Emails)</span></label>
                   <button type="button" onClick={addEmail}
-                    className="flex items-center gap-1.5 text-ink-400 hover:text-ink-300 text-xs font-medium transition-colors">
-                    <Plus size={13} />Add Teammate
+                    className="flex items-center gap-2 text-blue-400 hover:text-blue-700 bg-blue-500/20 hover:bg-blue-500/30 font-bold px-4 py-2 rounded-xl transition-colors text-sm">
+                    <Plus size={16} />Add Teammate
                   </button>
                 </div>
                 
                 <div className="space-y-3">
                   {emails.map((email, i) => (
-                    <div key={i} className="flex items-center gap-2 animate-slide-in">
+                    <div key={i} className="flex items-center gap-3 animate-slide-in">
                       <input
                         type="email"
                         placeholder="teammate@muj.manipal.edu"
                         value={email}
                         onChange={e => updateEmail(i, e.target.value)}
-                        className="input-field flex-1 text-sm py-2.5"
+                        className="input-field bg-white/5 backdrop-blur-md shadow-sm flex-1 !py-3.5 border-white/10"
                       />
                       <button type="button" onClick={() => removeEmail(i)}
-                        className="p-2.5 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all">
-                        <Trash2 size={15} />
+                        className="p-3.5 rounded-xl text-white/40 hover:text-red-500 hover:bg-red-500/20 transition-all">
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-white/30 mt-3">You don't need to add your own email, we'll include you automatically. Your teammates must already have accounts on Class2Event.</p>
+                <div className="mt-4 p-4 bg-transparent border border-white/10 rounded-xl">
+                  <p className="text-sm font-bold text-white/60 leading-relaxed">
+                    You <span className="text-white border-b-2 border-[#FFB800]">do not</span> need to add your own email, we'll include you automatically in the submission. Make sure your teammates already have accounts on Class2Event.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
 
-          <button type="submit" disabled={submitting} className="btn-primary w-full py-3 flex justify-center mt-6 text-sm font-semibold">
-            {submitting ? 'Submitting...' : 'Submit Registration'}
+          <button type="submit" disabled={submitting} className="btn-primary w-full !py-4 flex justify-center mt-6 text-lg font-bold">
+            {submitting ? 'Submitting Registration...' : 'Submit Registration'}
           </button>
         </form>
       </main>

@@ -66,100 +66,98 @@ export default function ClubDashboard() {
 
   const statusTag = (date) => {
     const d = new Date(date)
-    if (isToday(d)) return { label: 'Today', color: 'bg-mint-400/15 text-mint-400' }
-    if (isPast(d)) return { label: 'Past', color: 'bg-white/8 text-white/30' }
-    return { label: 'Upcoming', color: 'bg-ink-500/20 text-ink-300' }
+    if (isToday(d)) return { label: 'Today', color: 'bg-green-100 text-green-300' }
+    if (isPast(d)) return { label: 'Past', color: 'bg-white/10 text-white/60' }
+    return { label: 'Upcoming', color: 'bg-blue-100 text-blue-700' }
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: '#0d0d1a' }}>
-      {/* Fixed background glow */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] opacity-30 rounded-full"
-          style={{ background: 'radial-gradient(circle, #6366f1 0%, rgba(99,102,241,0.4) 40%,, transparent 70%)', transform: 'translate(20%, -20%)' }} />
-      </div>
-
+    <div className="min-h-screen relative overflow-hidden bg-transparent">
+      
       {/* Header */}
-      <header className="sticky top-0 z-40 glass-strong border-b border-white/8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-40 bg-white/5 backdrop-blur-md border-b border-white/10 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-ink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Zap size={16} className="text-white" />
+            <div className="w-10 h-10 bg-[#FFB800] rounded-[1rem] flex items-center justify-center flex-shrink-0 shadow-md shadow-[#FFB800]/20 transform rotate-3">
+              <Zap size={20} className="text-white" />
             </div>
             <div>
-              <span className="text-white font-bold text-sm">class2event</span>
-              <div className="text-white/30 text-xs leading-none">{user?.name}</div>
+              <span className="text-white font-black text-lg">class2event</span>
+              <div className="text-white/60 font-bold text-xs leading-none mt-0.5">{user?.name}</div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link to="/events/new" className="btn-primary flex items-center gap-1.5 py-2 px-4 text-sm">
-              <Plus size={15} />
+          <div className="flex items-center gap-3">
+            <Link to="/events/new" className="btn-primary flex items-center gap-1.5 !py-2.5 !px-5 text-sm">
+              <Plus size={18} />
               <span className="hidden sm:inline">New Event</span>
             </Link>
             <button onClick={handleLogout}
-              className="p-2.5 rounded-xl text-white/40 hover:text-white/80 hover:bg-white/8 transition-all">
-              <LogOut size={16} />
+              className="p-2.5 rounded-xl text-white/40 hover:text-white/90 hover:bg-white/10 transition-all">
+              <LogOut size={20} />
             </button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8 animate-fade-up">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10 animate-fade-up">
           {[
             { label: 'Total Events', value: events.length, icon: Calendar },
             { label: 'Upcoming', value: upcoming.length, icon: ChevronRight },
             { label: 'Past Events', value: past.length, icon: Clock },
             { label: 'Teams', value: events.reduce((a, e) => a + new Set(e.teams?.map(t => t.teamName)).size, 0), icon: Users },
           ].map(({ label, value, icon: Icon }, i) => (
-            <div key={label} className={`card stagger-${i + 1} animate-fade-up opacity-0`}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-white/40 text-xs font-medium">{label}</span>
-                <Icon size={14} className="text-ink-400" />
+            <div key={label} className={`card stagger-${i + 1} opacity-0`}>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-white/60 text-sm font-bold uppercase tracking-wide">{label}</span>
+                <div className="p-2 bg-transparent rounded-lg text-white/40">
+                  <Icon size={16} />
+                </div>
               </div>
-              <div className="text-2xl font-bold text-white">{value}</div>
+              <div className="text-4xl font-black text-white">{value}</div>
             </div>
           ))}
         </div>
 
         {/* Search */}
-        <div className="relative mb-6 animate-fade-up" style={{ animationDelay: '0.2s' }}>
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+        <div className="relative mb-8 animate-fade-up" style={{ animationDelay: '0.2s' }}>
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
           <input
             type="text"
             placeholder="Search events by name or venue..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="input-field pl-10 max-w-sm"
+            className="input-field pl-12 max-w-md shadow-sm border-2 border-white/10/60"
           />
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-ink-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-white/10 border-t-[#FFB800] rounded-full animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 animate-fade-in">
-            <Calendar size={40} className="text-white/15 mx-auto mb-4" />
-            <h3 className="text-white/60 font-medium mb-1">
+          <div className="text-center py-24 animate-fade-in card border-dashed border-2 border-white/10 shadow-none bg-transparent">
+            <Calendar size={48} className="text-white/30 mx-auto mb-5" />
+            <h3 className="text-white/90 font-black text-xl mb-2">
               {search ? 'No events match your search' : 'No events yet'}
             </h3>
-            <p className="text-white/30 text-sm mb-6">
+            <p className="text-white/60 font-semibold mb-8">
               {!search && 'Create your first event to get started'}
             </p>
             {!search && (
-              <Link to="/events/new" className="btn-primary inline-flex items-center gap-2 text-sm">
-                <Plus size={15} /> Create first event
+              <Link to="/events/new" className="btn-primary inline-flex items-center gap-2 text-base">
+                <Plus size={18} /> Create First Event
               </Link>
             )}
           </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {upcoming.length > 0 && (
               <section className="animate-fade-up" style={{ animationDelay: '0.25s' }}>
-                <h2 className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-4">Upcoming</h2>
-                <div className="grid gap-3">
+                <h2 className="text-sm font-black text-white/40 uppercase tracking-widest mb-5 ml-2">Upcoming Events</h2>
+                <div className="grid gap-4">
                   {upcoming.map((event, i) => (
                     <EventCard key={event.id} event={event} index={i}
                       onDelete={() => setShowDeleteModal(event)}
@@ -170,8 +168,8 @@ export default function ClubDashboard() {
             )}
             {past.length > 0 && (
               <section className="animate-fade-up" style={{ animationDelay: '0.3s' }}>
-                <h2 className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-4">Past Events</h2>
-                <div className="grid gap-3 opacity-70">
+                <h2 className="text-sm font-black text-white/40 uppercase tracking-widest mb-5 ml-2">Past Events</h2>
+                <div className="grid gap-4 opacity-80">
                   {past.map((event, i) => (
                     <EventCard key={event.id} event={event} index={i}
                       onDelete={() => setShowDeleteModal(event)}
@@ -186,29 +184,28 @@ export default function ClubDashboard() {
 
       {/* Delete confirmation modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in"
-          style={{ background: 'rgba(0,0,0,0.7)' }}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in bg-slate-900/40 backdrop-blur-sm"
           onClick={() => setShowDeleteModal(null)}>
-          <div className="glass-strong rounded-2xl p-6 max-w-sm w-full animate-fade-up"
+          <div className="bg-white/5 backdrop-blur-md rounded-[32px] shadow-2xl p-8 max-w-sm w-full animate-fade-up border border-white/10"
             onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center">
-                <AlertTriangle size={18} className="text-red-400" />
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                <AlertTriangle size={24} className="text-red-500" />
               </div>
               <div>
-                <h3 className="text-white font-semibold">Delete event?</h3>
-                <p className="text-white/40 text-xs">This action cannot be undone</p>
+                <h3 className="text-white font-black text-xl">Delete Event?</h3>
+                <p className="text-white/60 font-bold text-sm">Action cannot be undone</p>
               </div>
             </div>
-            <p className="text-white/60 text-sm mb-5">
-              You're about to delete <span className="text-white font-medium">"{showDeleteModal.name}"</span> and all its team data.
+            <p className="text-white/80 font-medium mb-8">
+              You're about to delete <span className="text-white font-black">"{showDeleteModal.name}"</span> and all its team data.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDeleteModal(null)} className="btn-ghost flex-1 text-sm">Cancel</button>
+              <button onClick={() => setShowDeleteModal(null)} className="btn-ghost flex-1">Cancel</button>
               <button
                 onClick={() => handleDelete(showDeleteModal.id)}
                 disabled={deletingId === showDeleteModal.id}
-                className="flex-1 py-2.5 px-4 bg-red-500/90 hover:bg-red-500 text-white text-sm font-semibold rounded-xl transition-all disabled:opacity-50">
+                className="flex-1 py-3 px-6 bg-red-500 hover:bg-red-600 text-white font-bold rounded-2xl transition-all disabled:opacity-50">
                 {deletingId ? 'Deleting...' : 'Delete'}
               </button>
             </div>
@@ -227,43 +224,45 @@ function EventCard({ event, index, onDelete, fmtDuration, statusTag }) {
 
   return (
     <div
-      className="card cursor-pointer group hover:border-ink-500/30 hover:bg-white/6 animate-fade-up opacity-0"
+      className="card group hover:border-blue-500/30 cursor-pointer p-6 animate-fade-up opacity-0"
       style={{ animationDelay: `${index * 0.05}s` }}
       onClick={() => navigate(`/events/${event.id}`)}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span className={`tag ${st.color}`}>{st.label}</span>
             {event.teams?.some(t => t.role === 'organizer') && (
-              <span className="tag bg-amber-400/15 text-amber-400">Has organizer</span>
+              <span className="tag bg-amber-100 text-amber-700">Has Organizer</span>
             )}
           </div>
-          <h3 className="text-white font-semibold text-base group-hover:text-ink-300 transition-colors truncate">{event.name}</h3>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
-            <span className="flex items-center gap-1.5 text-white/40 text-xs">
-              <MapPin size={11} />{event.venue}
+          <h3 className="text-white font-black text-xl group-hover:text-blue-400 transition-colors truncate">{event.name}</h3>
+          
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3">
+            <span className="flex items-center gap-2 text-white/60 font-semibold text-sm">
+              <MapPin size={14} className="text-white/40" />{event.venue}
             </span>
-            <span className="flex items-center gap-1.5 text-white/40 text-xs">
-              <Calendar size={11} />{format(new Date(event.date), 'MMM d, yyyy • h:mm a')}
+            <span className="flex items-center gap-2 text-white/60 font-semibold text-sm">
+              <Calendar size={14} className="text-white/40" />{format(new Date(event.date), 'MMM d, yyyy • h:mm a')}
             </span>
-            <span className="flex items-center gap-1.5 text-white/40 text-xs">
-              <Clock size={11} />{fmtDuration(event.duration)}
+            <span className="flex items-center gap-2 text-white/60 font-semibold text-sm">
+              <Clock size={14} className="text-white/40" />{fmtDuration(event.duration)}
             </span>
             {memberCount > 0 && (
-              <span className="flex items-center gap-1.5 text-white/40 text-xs">
-                <Users size={11} />{memberCount} member{memberCount !== 1 ? 's' : ''} · {teamCount} team{teamCount !== 1 ? 's' : ''}
+              <span className="flex items-center gap-2 text-white/60 font-semibold text-sm">
+                <Users size={14} className="text-white/40" />{memberCount} member{memberCount !== 1 ? 's' : ''} · {teamCount} team{teamCount !== 1 ? 's' : ''}
               </span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
+        
+        <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
           <button onClick={() => navigate(`/events/${event.id}/edit`)}
-            className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/8 transition-all">
-            <Edit3 size={14} />
+            className="p-2.5 rounded-xl text-white/40 hover:text-blue-400 hover:bg-blue-500/20 transition-all">
+            <Edit3 size={18} />
           </button>
           <button onClick={onDelete}
-            className="p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all">
-            <Trash2 size={14} />
+            className="p-2.5 rounded-xl text-white/40 hover:text-red-400 hover:bg-red-500/20 transition-all">
+            <Trash2 size={18} />
           </button>
         </div>
       </div>

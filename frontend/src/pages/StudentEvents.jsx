@@ -41,71 +41,72 @@ export default function StudentEvents() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden" style={{ background: '#0d0d1a' }}>
-      <header className="sticky top-0 z-40 glass-strong border-b border-white/8">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center">
+    <div className="min-h-screen relative overflow-hidden bg-transparent">
+      <header className="sticky top-0 z-40 bg-white/5 backdrop-blur-md border-b border-white/10 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center">
           <button onClick={() => navigate('/dashboard')}
-            className="p-2 mr-3 rounded-xl text-white/40 hover:text-white hover:bg-white/8 transition-all">
-            <ArrowLeft size={18} />
+            className="p-2.5 mr-4 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all bg-transparent">
+            <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-ink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Zap size={16} className="text-white" />
+            <div className="w-10 h-10 bg-[#FFB800] rounded-[1rem] flex items-center justify-center flex-shrink-0 shadow-md transform rotate-3">
+              <Zap size={20} className="text-white" />
             </div>
-            <span className="text-white font-bold text-sm">class2event</span>
+            <span className="text-white font-black text-lg">class2event</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div className="mb-8 animate-fade-up">
-          <h1 className="text-3xl font-bold text-white mb-2">Upcoming Events</h1>
-          <p className="text-white/50">Discover and register for upcoming club events.</p>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
+        <div className="mb-10 animate-fade-up">
+          <h1 className="text-4xl font-black text-white mb-2">Upcoming Events</h1>
+          <p className="text-white/60 font-semibold text-lg">Discover and register for upcoming club events.</p>
         </div>
 
-        <div className="relative mb-6 animate-fade-up" style={{ animationDelay: '0.1s' }}>
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+        <div className="relative mb-10 animate-fade-up" style={{ animationDelay: '0.1s' }}>
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
           <input
             type="text"
             placeholder="Search by event or club name..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="input-field pl-10 max-w-sm"
+            className="input-field pl-12 max-w-md shadow-sm border-2 border-white/10"
           />
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-2 border-ink-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-white/10 border-t-[#FFB800] rounded-full animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20 animate-fade-in opacity-50">
-            <Calendar size={40} className="text-white/20 mx-auto mb-4" />
-            <h3 className="text-white/60 font-medium mb-1">No upcoming events found</h3>
+          <div className="text-center py-24 animate-fade-in card bg-transparent border-dashed border-2 border-white/10 shadow-none max-w-2xl mx-auto">
+            <Calendar size={48} className="text-white/30 mx-auto mb-4" />
+            <h3 className="text-white/90 font-black text-2xl mb-2">No upcoming events found</h3>
+            <p className="text-white/60 font-semibold">We couldn't find anything matching your search query.</p>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((event, i) => (
-              <div key={event.id} className="card group hover:border-ink-500/30 hover:bg-white/6 animate-fade-up opacity-0 flex flex-col"
+              <div key={event.id} className="card group hover:border-[#FFB800]/60 hover:-translate-y-1 animate-fade-up opacity-0 flex flex-col p-6 border-2 border-white/10 transition-all shadow-sm"
                 style={{ animationDelay: `${i * 0.05 + 0.1}s` }}>
-                <div className="mb-4">
-                  <div className="text-xs text-ink-400 font-semibold mb-1 uppercase tracking-wider">{event.club.name}</div>
-                  <h3 className="text-white font-semibold text-lg group-hover:text-ink-300 transition-colors line-clamp-2">{event.name}</h3>
+                <div className="mb-5">
+                  <div className="text-xs text-amber-400 font-bold mb-2 uppercase tracking-widest">{event.club.name}</div>
+                  <h3 className="text-white font-black text-2xl group-hover:text-amber-400 transition-colors line-clamp-2 leading-tight">{event.name}</h3>
                 </div>
                 
-                <div className="mt-auto space-y-2 mb-6">
-                  <span className="flex items-center gap-2 text-white/50 text-sm">
-                    <Calendar size={14} className="text-white/30" /> {format(new Date(event.date), 'MMM d, yyyy • h:mm a')}
+                <div className="mt-auto space-y-3 mb-8">
+                  <span className="flex items-center gap-3 text-white/80 font-semibold text-sm">
+                    <Calendar size={16} className="text-white/40" /> {format(new Date(event.date), 'MMM d, yyyy')}
                   </span>
-                  <span className="flex items-center gap-2 text-white/50 text-sm">
-                    <MapPin size={14} className="text-white/30" /> {event.venue}
+                  <span className="flex items-center gap-3 text-white/80 font-semibold text-sm">
+                    <Clock size={16} className="text-white/40" /> {format(new Date(event.date), 'h:mm a')} <span className="text-white/40 font-bold text-xs ml-1">• {fmtDuration(event.duration)}</span>
                   </span>
-                  <span className="flex items-center gap-2 text-white/50 text-sm">
-                    <Clock size={14} className="text-white/30" /> {fmtDuration(event.duration)}
+                  <span className="flex items-center gap-3 text-white/80 font-semibold text-sm">
+                    <MapPin size={16} className="text-white/40" /> {event.venue}
                   </span>
                 </div>
                 
-                <Link to={`/events/${event.id}/register`} className="btn-primary w-full text-center py-2.5 text-sm">
+                <Link to={`/events/${event.id}/register`} className="btn-primary w-full text-center !py-3.5 text-base bg-slate-900 hover:bg-[#FFB800] hover:text-white transition-colors duration-300">
                   Register Now
                 </Link>
               </div>

@@ -7,23 +7,28 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ['"Clash Display"', '"Plus Jakarta Sans"', 'sans-serif'],
-        body: ['"Plus Jakarta Sans"', 'sans-serif'],
+        display: ['"Nunito"', 'sans-serif'],
+        body: ['"Nunito"', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
       colors: {
+        school: {
+          bg: '#FFB800', // A vibrant, warm, friendly yellow/orange
+          card: '#FFFFFF', // Pristine white cards
+        },
         ink: {
-          50: '#f0f0ff',
-          100: '#e2e2ff',
-          200: '#c8c8ff',
-          300: '#a3a3ff',
-          400: '#7c6dff',
-          500: '#6246ff',
-          600: '#5030f5',
-          700: '#4422e0',
-          800: '#3a1eb5',
-          900: '#2d1a8c',
-          950: '#1a0f57',
+          // Replacing ink (purple) with slate to avoid compiler breaks on old views while providing dark slate text.
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
+          950: '#020617',
         },
         coral: {
           400: '#ff6b6b',
