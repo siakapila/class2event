@@ -28,7 +28,8 @@ model Student {
   password       String
   isVerified     Boolean  @default(false)
   registrationNo String   @unique
-  className      String
+  department     String
+  section        String
   year           Int
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
