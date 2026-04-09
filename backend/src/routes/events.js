@@ -31,10 +31,10 @@ router.get('/:id', async (req, res) => {
       where: { id: req.params.id, clubId: req.user.id },
       include: {
         registrations: {
-          include: { members: { include: { student: { select: { name: true, email: true, className: true, registrationNo: true } } } } }
+          include: { members: { include: { student: { select: { name: true, email: true, department: true, section: true, registrationNo: true } } } } }
         },
         organizers: {
-          include: { student: { select: { name: true, email: true, className: true, registrationNo: true } } }
+          include: { student: { select: { name: true, email: true, department: true, section: true, registrationNo: true } } }
         }
       }
     })
@@ -49,7 +49,7 @@ router.get('/:id', async (req, res) => {
 // Create event
 router.post('/', async (req, res) => {
   try {
-    const { name, venue, date, duration, description, organizers } = req.body
+    const { name, venue, date, duration, description, organizers, isPaid, registrationFee, qrCodeUrl } = req.body
 
     if (!name || !venue || !date || !duration) {
       return res.status(400).json({ error: 'Name, venue, date, and duration are required' })
@@ -74,6 +74,9 @@ router.post('/', async (req, res) => {
         date: new Date(date),
         duration: parseInt(duration),
         description,
+        isPaid: Boolean(isPaid),
+        registrationFee: isPaid ? parseInt(registrationFee) || 0 : null,
+        qrCodeUrl: isPaid ? qrCodeUrl : null,
         clubId: req.user.id,
         organizers: {
           create: orgIds.map(studentId => ({ studentId }))
@@ -92,7 +95,7 @@ router.post('/', async (req, res) => {
 // Update event
 router.put('/:id', async (req, res) => {
   try {
-    const { name, venue, date, duration, description, organizers } = req.body
+    const { name, venue, date, duration, description, organizers, isPaid, registrationFee, qrCodeUrl } = req.body
 
     const existing = await prisma.event.findFirst({
       where: { id: req.params.id, clubId: req.user.id }
@@ -118,6 +121,9 @@ router.put('/:id', async (req, res) => {
         name, venue, description,
         date: date ? new Date(date) : undefined,
         duration: duration ? parseInt(duration) : undefined,
+        isPaid: isPaid !== undefined ? Boolean(isPaid) : undefined,
+        registrationFee: isPaid ? parseInt(registrationFee) || 0 : null,
+        qrCodeUrl: isPaid ? qrCodeUrl : null,
         organizers: {
           create: orgIds.map(studentId => ({ studentId }))
         }

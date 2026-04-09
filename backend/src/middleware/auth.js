@@ -18,7 +18,7 @@ export const authenticate = async (req, res, next) => {
     if (role === 'club') {
       dbUser = await prisma.club.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, isVerified: true } })
     } else if (role === 'student') {
-      dbUser = await prisma.student.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, registrationNo: true, className: true, year: true, isVerified: true } })
+      dbUser = await prisma.student.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, registrationNo: true, department: true, section: true, year: true, isVerified: true } })
     } else if (role === 'teacher') {
       dbUser = await prisma.teacher.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true, isVerified: true } })
     }

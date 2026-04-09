@@ -173,7 +173,7 @@ export default function EventDetails() {
                     </div>
                     <div>
                       <div className="text-white font-bold">{o.student.name}</div>
-                      <div className="text-white/60 font-semibold text-xs mt-0.5">{o.student.registrationNo} • {o.student.className}</div>
+                      <div className="text-white/60 font-semibold text-xs mt-0.5">{o.student.registrationNo} • {o.student.department} {o.student.section}</div>
                     </div>
                   </div>
                 ))}
@@ -198,9 +198,23 @@ export default function EventDetails() {
                           <div key={m.id} className="text-sm font-bold text-white/90 flex items-center gap-2">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                             {m.student.name} <span className="text-white/40 font-semibold font-mono">({m.student.registrationNo})</span>
-                            <span className="text-white/40 font-semibold">— {m.student.className}</span>
+                            <span className="text-white/40 font-semibold">— {m.student.department} {m.student.section}</span>
                           </div>
                         ))}
+                        {r.transactionId && (
+                          <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10 text-sm animate-fade-in shadow-inner">
+                            <span className="text-amber-400 font-black uppercase tracking-wider text-[10px] block mb-0.5">UPI Transaction ID</span>
+                            <span className="font-mono text-white/90 font-bold block mb-2">{r.transactionId}</span>
+                            {r.paymentScreenshotUrl && (
+                              <a href={r.paymentScreenshotUrl} target="_blank" rel="noopener noreferrer" className="inline-block relative group">
+                                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                                  <span className="text-white text-xs font-bold">Enlarge</span>
+                                </div>
+                                <img src={r.paymentScreenshotUrl} alt="Payment Proof" className="h-16 w-16 object-cover rounded-lg border border-white/20 shadow-sm" />
+                              </a>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex gap-3 w-full sm:w-auto">
@@ -244,6 +258,21 @@ export default function EventDetails() {
                             {m.student.name} <span className="text-white/40 font-mono">({m.student.registrationNo})</span>
                           </div>
                         ))}
+                        {r.transactionId && (
+                          <div className="mt-2 text-xs font-semibold text-white/40 border-t border-white/10 pt-3">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="uppercase tracking-wider mr-2 text-white/60">UPI Ref:</span>
+                                <span className="font-mono text-white/80">{r.transactionId}</span>
+                              </div>
+                              {r.paymentScreenshotUrl && (
+                                <a href={r.paymentScreenshotUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 group">
+                                  <img src={r.paymentScreenshotUrl} alt="Proof" className="h-8 w-8 object-cover rounded border border-white/20 group-hover:opacity-80 transition-opacity" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="flex-shrink-0 mt-2 sm:mt-0">

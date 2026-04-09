@@ -52,11 +52,17 @@ router.get('/me', async (req, res) => {
 // Register for an event
 router.post('/events/:id/register', async (req, res) => {
   try {
-    const { teamName, members } = req.body // members is an array of emails
+    const { teamName, members, transactionId, paymentScreenshotUrl } = req.body // members is an array of emails
     if (!members || !members.length) return res.status(400).json({ error: 'At least one participant is required' })
 
     const event = await prisma.event.findUnique({ where: { id: req.params.id } })
     if (!event) return res.status(404).json({ error: 'Event not found' })
+    
+    if (event.isPaid) {
+      if (!transactionId?.trim() || !paymentScreenshotUrl?.trim()) {
+        return res.status(400).json({ error: 'A valid UPI transaction ID and a screenshot of the payment are required for paid events' })
+      }
+    }
 
     // Include the current student if not already in the list
     const myStudent = await prisma.student.findUnique({ where: { id: req.user.id } })
@@ -91,6 +97,8 @@ router.post('/events/:id/register', async (req, res) => {
       data: {
         eventId: req.params.id,
         teamName: teamName || null,
+        transactionId: transactionId?.trim() || null,
+        paymentScreenshotUrl: paymentScreenshotUrl?.trim() || null,
         members: {
           create: students.map(s => ({
             studentId: s.id
@@ -115,7 +123,7 @@ router.get('/search-students', async (req, res) => {
 
     const students = await prisma.student.findMany({
       where: { email: { contains: email, mode: 'insensitive' } },
-      select: { name: true, email: true, className: true },
+      select: { name: true, email: true, department: true, section: true },
       take: 5
     })
     res.json({ students })

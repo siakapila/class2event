@@ -12,7 +12,8 @@ export default function CreateEvent() {
   const isEdit = !!id
 
   const [form, setForm] = useState({
-    name: '', venue: '', date: '', time: '', duration: 60, description: ''
+    name: '', venue: '', date: '', time: '', duration: 60, description: '',
+    isPaid: false, registrationFee: '', qrCodeUrl: ''
   })
   
   const [organizers, setOrganizers] = useState([''])
@@ -37,7 +38,10 @@ export default function CreateEvent() {
         date: d.toISOString().split('T')[0],
         time: d.toTimeString().slice(0, 5),
         duration: ev.duration,
-        description: ev.description || ''
+        description: ev.description || '',
+        isPaid: ev.isPaid || false,
+        registrationFee: ev.registrationFee || '',
+        qrCodeUrl: ev.qrCodeUrl || ''
       })
       
       const orgs = ev.organizers.map(o => o.student.email)
@@ -57,6 +61,10 @@ export default function CreateEvent() {
     if (!form.time) e.time = 'Time is required'
     if (!form.duration || form.duration < 1) e.duration = 'Duration must be at least 1 minute'
     if (form.duration > 1440) e.duration = 'Duration cannot exceed 1440 minutes'
+    if (form.isPaid) {
+      if (!form.registrationFee || form.registrationFee <= 0) e.registrationFee = 'Valid registration fee is required'
+      if (!form.qrCodeUrl) e.qrCodeUrl = 'Payment QR Code is required'
+    }
     return e
   }
 
@@ -76,7 +84,10 @@ export default function CreateEvent() {
       date: new Date(`${form.date}T${form.time}`).toISOString(),
       duration: parseInt(form.duration),
       description: form.description.trim() || null,
-      organizers: validOrgs
+      organizers: validOrgs,
+      isPaid: form.isPaid,
+      registrationFee: form.isPaid ? parseInt(form.registrationFee) : null,
+      qrCodeUrl: form.isPaid ? form.qrCodeUrl : null,
     }
 
     try {
@@ -101,6 +112,21 @@ export default function CreateEvent() {
   const addOrganizer = () => setOrganizers(o => [...o, ''])
   const removeOrganizer = (i) => setOrganizers(o => o.filter((_, idx) => idx !== i))
   const setOrganizer = (i, val) => setOrganizers(o => o.map((email, idx) => idx === i ? val : email))
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      setErrors(err => ({ ...err, qrCodeUrl: 'Image size must be less than 2MB' }))
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      setForm(f => ({ ...f, qrCodeUrl: event.target.result }))
+      if (errors.qrCodeUrl) setErrors(er => ({ ...er, qrCodeUrl: '' }))
+    }
+    reader.readAsDataURL(file)
+  }
 
   if (fetching) return (
     <div className="min-h-screen flex items-center justify-center bg-transparent">
@@ -202,6 +228,58 @@ export default function CreateEvent() {
                   value={form.description} onChange={setField('description')}
                   className="input-field bg-white/5 backdrop-blur-md shadow-sm resize-none" />
               </div>
+            </div>
+          </div>
+
+          <div className="card animate-fade-up" style={{ animationDelay: '0.05s' }}>
+            <div className="flex items-center gap-3 mb-6">
+               <div className="p-2 bg-green-500/20 text-green-400 rounded-xl">
+                 <Zap size={20} />
+               </div>
+               <h2 className="text-white font-black text-xl">Payment & Registration Fee</h2>
+            </div>
+            
+            <div className="space-y-6">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className={`relative w-12 h-6 rounded-full transition-colors ${form.isPaid ? 'bg-amber-500' : 'bg-white/10'}`}>
+                  <div className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${form.isPaid ? 'translate-x-6' : 'translate-x-0'}`} />
+                </div>
+                <input type="checkbox" className="hidden" checked={form.isPaid} onChange={e => setField('isPaid')({ target: { value: e.target.checked }})} />
+                <span className="text-white/90 font-bold group-hover:text-amber-400 transition-colors">This is a Paid Event</span>
+              </label>
+
+              {form.isPaid && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 animate-fade-in p-6 bg-white/5 rounded-2xl border border-white/10">
+                  <div>
+                    <label className="block text-sm font-bold text-white/90 mb-2">Registration Fee (₹) <span className="text-red-500">*</span></label>
+                    <input type="number" placeholder="e.g. 150" min="1"
+                      value={form.registrationFee} onChange={setField('registrationFee')}
+                      className={`input-field bg-white/10 !py-3.5 shadow-sm ${errors.registrationFee ? 'border-red-300 focus:ring-red-200' : ''}`} />
+                    {errors.registrationFee && <p className="text-red-500 font-bold text-xs mt-2">{errors.registrationFee}</p>}
+                  </div>
+
+                  <div>
+                     <label className="block text-sm font-bold text-white/90 mb-2">Payment QR Code <span className="text-red-500">*</span></label>
+                     <div className="relative">
+                       <input type="file" accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                       <div className={`flex items-center justify-center border-2 border-dashed rounded-xl p-4 text-center transition-colors ${errors.qrCodeUrl ? 'border-red-400 bg-red-500/10' : 'border-white/20 bg-white/5 hover:border-amber-400/50 hover:bg-white/10'}`}>
+                         {form.qrCodeUrl ? (
+                           <div className="flex flex-col items-center">
+                             <img src={form.qrCodeUrl} alt="QR Code Preview" className="h-20 object-contain rounded-lg shadow-sm mb-2" />
+                             <span className="text-xs font-bold text-amber-400">Click to replace</span>
+                           </div>
+                         ) : (
+                           <div className="flex flex-col items-center text-white/40 py-2">
+                             <span className="text-sm font-bold uppercase tracking-widest mb-1 text-white/60">Upload QR Image</span>
+                             <span className="text-xs font-semibold">JPG, PNG up to 2MB</span>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                     {errors.qrCodeUrl && <p className="text-red-500 font-bold text-xs mt-2">{errors.qrCodeUrl}</p>}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

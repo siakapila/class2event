@@ -17,13 +17,15 @@ router.get('/dashboard', async (req, res) => {
       include: {
         club: { select: { name: true } },
         organizers: {
-          include: { student: { select: { name: true, registrationNo: true, className: true, year: true, email: true } } }
+          select: {
+            student: { select: { name: true, registrationNo: true, department: true, section: true, year: true, email: true } }
+          }
         },
         registrations: {
           where: { status: 'VERIFIED' },
           include: {
             members: {
-              include: { student: { select: { name: true, registrationNo: true, className: true, year: true, email: true } } }
+              include: { student: { select: { name: true, registrationNo: true, department: true, section: true, year: true, email: true } } }
             }
           }
         }

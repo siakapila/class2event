@@ -61,6 +61,9 @@ model Event {
   description String?
   clubId      String
   club        Club         @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  isPaid          Boolean      @default(false)
+  registrationFee Int?
+  qrCodeUrl       String?      @db.Text
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   
@@ -87,6 +90,8 @@ model EventRegistration {
   eventId   String
   teamName  String?  
   status    String   @default("PENDING") // PENDING, VERIFIED, REJECTED
+  transactionId String?
+  paymentScreenshotUrl String? @db.Text
   event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
   members   RegistrationMember[]
   createdAt DateTime @default(now())

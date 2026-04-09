@@ -89,6 +89,37 @@ async function main() {
   });
   console.log(`Created teacher: ${teacher.name} (${teacher.email})`);
 
+  // 3b. Create another Fake Teacher
+  const teacher2 = await prisma.teacher.upsert({
+    where: { email: 'dr.brown@jaipur.manipal.edu' },
+    update: {},
+    create: {
+      name: 'Dr. Brown',
+      email: 'dr.brown@jaipur.manipal.edu',
+      password,
+      isVerified: true,
+    },
+  });
+  console.log(`Created teacher: ${teacher2.name} (${teacher2.email})`);
+
+  // 2d. Create a fourth Fake Student
+  const student4 = await prisma.student.upsert({
+    where: { email: 'maria.garcia@muj.manipal.edu' },
+    update: {},
+    create: {
+      name: 'Maria Garcia',
+      email: 'maria.garcia@muj.manipal.edu',
+      password,
+      registrationNo: '200901333',
+      className: undefined, // remove old property
+      department: 'CSE',
+      section: 'J',
+      year: 3,
+      isVerified: true,
+    },
+  });
+  console.log(`Created student: ${student4.name} (${student4.email})`);
+
   // 4. Create an Event
   const event = await prisma.event.create({
     data: {
