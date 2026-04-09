@@ -1,6 +1,6 @@
-# Class2Event – Club Event Management Platform
+# Class2Event – Advanced Campus Event & Attendance Platform
 
-A production-grade, full-stack web application designed for organizing and managing university events with a strict 3-way Role-Based Access Control (RBAC) system for Clubs, Students, and Teachers.
+A full-stack, production-grade web application tailored for university ecosystems. It serves as an integrated event management and real-time attendance system featuring a centralized strict Role-Based Access Control (RBAC) architecture for **Clubs, Students, and Teachers**.
 
 ![React](https://img.shields.io/badge/Frontend-React-blue)
 ![Node.js](https://img.shields.io/badge/Backend-Node.js-green)
@@ -10,26 +10,31 @@ A production-grade, full-stack web application designed for organizing and manag
 
 ---
 
-## 🚀 Key Features & Security Upgrades
+## 🚀 Key Features
 
-- **Strict 3-Way Authentication**: Separate login/signup flows for Clubs, Students (`@muj.manipal.edu`), and Teachers (`@jaipur.manipal.edu`).
-- **Email Verification**: Single-use, expiring UUID tokens sent via email (Nodemailer/Ethereal) to verify accounts before granting access to protected routes.
-- **Hardened Security**: 
-  - Password hashing via `bcryptjs`.
-  - Stateless JWT authentication validated against the live database on every request to prevent replay attacks.
-  - Rate Limiting (`express-rate-limit`) to prevent brute-force and credential stuffing.
-  - HTTP Security Headers (`helmet`) and Parameter Pollution protection (`hpp`).
-- **Event Management**: Create, view, and manage events and team participations securely.
-- **Dockerized Infrastructure**: Effortlessly spin up the entire backend and PostgreSQL database using Docker Compose.
+- **Department & Section Hierarchy**: Students are strictly mapped to their Department (e.g., CSE, IT) and Section during signup, allowing highly segmented data structures.
+- **Teacher Analytics Dashboard**: Teachers get a minimized 2-click interface to query Department & Section-wise student attendance data with one-click export (CSV/PDF) features to guarantee transparency.
+- **Paid Event Integrations**: Built-in support for ticketing/paid registration. Clubs upload a custom payment QR code and set fees, while configuring the gateway to forcefully demand securely uploaded UPI Transaction IDs and digital payment screenshots from students to prevent discrepancies.
+- **Organizers & Teams**: Support for solo, group, and organizing committee registrations.
+  
+## 🔐 Security & Architecture
+
+- **Strict 3-Way Authentication**: Isolated environments for Clubs, Students (`@muj.manipal.edu`), and Teachers (`@jaipur.manipal.edu`).
+- **OTP Verification Engine**: Replaced traditional UUID links with a dynamic 6-digit OTP verification flow backed by Nodemailer/Ethereal and an ephemeral in-memory cache system to combat server bloat.
+- **Hardened Server Security**: 
+  - Complete password hashing via `bcryptjs`.
+  - Stateless JWT token authorization enforced dynamically through active Postgres database checking.
+  - Bruteforce protection (`express-rate-limit`), Header manipulation defense (`helmet`), and Parameter Pollution protection (`hpp`).
+- **Dockerized Infrastructure**: Effortlessly spin up the entire isolated backend and PostgreSQL container network via Docker Compose.
 
 ---
 
 ## 🛡️ Authentication Flow
 
-1. **Signup**: Users register matching their specific domain requirement. The system hashes the password, creates an `unverified` account, and dispatches an email containing a secure token.
-2. **Verification**: Users click the emailed link (`/api/auth/verify-email?token=...`). The token is validated (checked for reuse/expiration), the user is marked as verified, and the token is burned.
-3. **Login**: Users log in to receive a JWT access token. 
-4. **Protected Access**: The backend middleware intercepts requests, extracts the JWT, and queries the database to ensure the user still exists, has the correct role, and is fully verified. If not, access is strictly denied (`403 Forbidden`).
+1. **Signup**: Users register matching their rigid domain requirements. The system intercepts the request, generates a secure 6-digit OTP via active cache, and holds the commit.
+2. **Verification**: Users input the OTP they securely receive. The ephemeral token is validated (timing constraints enforced) and the user safely commits to the database as fully verified.
+3. **Login**: Authenticated users receive a JWT access token. 
+4. **Protected Access**: Advanced middleware strips incoming requests and cross-references active tokens dynamically to the user base, forcefully blocking unauthorized roles (`403 Forbidden`).
 
 ---
 
@@ -72,8 +77,9 @@ VITE_API_URL=http://localhost:3001
 
 ```bash
 cd backend
-npm run prisma:generate
-npm run prisma:push
+npx prisma generate
+npx prisma db push
+node prisma/seed.js # Required to immediately load the test mock users!
 ```
 
 ### 4. Run Development Servers
@@ -83,23 +89,23 @@ From the root directory, start both frontend and backend concurrently:
 npm run dev
 ```
 
-- **Frontend**: http://localhost:5173
+- **Frontend Environment**: http://localhost:5173
 - **Backend API**: http://localhost:3001
 
 ---
 
-## 📂 Project Structure
+## 📂 Architecture Structure
 
 ```
 class2event/
 ├── backend/
-│   ├── prisma/             # Database Schema (ORM)
+│   ├── prisma/             # Relational Database Schema & Seeder
 │   ├── src/
-│   │   ├── lib/            # Email and Prisma singletons
-│   │   ├── middleware/     # Strict RBAC & Auth middleware
-│   │   └── routes/         # Auth, Event, Student, Teacher routes
+│   │   ├── lib/            # External APIs (Mailer, Database singletons)
+│   │   ├── middleware/     # Core RBAC & JWT Authorization rules
+│   │   └── routes/         # Express endpoints mapping (auth, events, dashboards)
 │   ├── Dockerfile
 │   └── package.json
-├── frontend/               # Vite + React + Tailwind
+├── frontend/               # Dynamic View Layer (Vite + React + Tailwind)
 └── docker-compose.yml      # Container Orchestration
 ```
